@@ -1,5 +1,6 @@
 package org.example.cart_shopping.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Cart {
@@ -12,6 +13,7 @@ public class Cart {
         this.userId = userId;
         this.cartId = cartId;
         this.totalPrice = totalPrice;
+        this.items = new ArrayList<>();
     }
 
     public String getUserId() {
