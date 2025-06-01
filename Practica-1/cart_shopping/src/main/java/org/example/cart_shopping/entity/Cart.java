@@ -9,10 +9,16 @@ public class Cart {
     private double totalPrice;
     private List<ItemCart> items;
 
-    public Cart(String userId, String cartId, double totalPrice) {
+    public Cart(String userId, String cartId) {
+        if (userId == null || userId.isEmpty()) {
+            throw new IllegalArgumentException("El userId no puede ser nulo o vacío.");
+        }
+        if (cartId == null || cartId.isEmpty()) {
+            throw new IllegalArgumentException("El cartId no puede ser nulo o vacío.");
+        }
         this.userId = userId;
         this.cartId = cartId;
-        this.totalPrice = totalPrice;
+        this.totalPrice = 0.0;
         this.items = new ArrayList<>();
     }
 
@@ -21,16 +27,24 @@ public class Cart {
     }
 
     public void setUserId(String userId) {
+        if (userId == null || userId.isEmpty()) {
+            throw new IllegalArgumentException("El userId no puede ser nulo o vacío.");
+        }
         this.userId = userId;
     }
+
 
     public String getCartId() {
         return cartId;
     }
 
     public void setCartId(String cartId) {
+        if (cartId == null || cartId.isEmpty()) {
+            throw new IllegalArgumentException("El cartId no puede ser nulo o vacío.");
+        }
         this.cartId = cartId;
     }
+
 
     public double getTotalPrice() {
         return totalPrice;
@@ -49,63 +63,61 @@ public class Cart {
     }
 
     public void addItem(ItemCart item) {
-        if (item == null || item.getProductId() == null || item.getQuantity() <= 0) {
-            throw new IllegalArgumentException("Invalid item to add to cart");
-        }else if (this.items == null) {
-            throw new IllegalStateException("Cart items list is not initialized");
-        }else if (this.items.contains(item)) {
-            throw new IllegalStateException("Item already exists in the cart");
-        }else {
-            this.items.add(item);
+        if (item == null) {
+            throw new IllegalArgumentException("El item no puede ser nulo.");
         }
-        this.totalPrice += item.getPrice() * item.getQuantity();
+        if (items.contains(item)) {
+            throw new IllegalStateException("El item ya existe en el carrito.");
+        }
+        items.add(item);
+        totalPrice += item.getSubtotal();
     }
 
-    public void removeItem(String productId) {
-        if (productId == null || this.items == null) {
-            throw new IllegalArgumentException("Invalid product ID or cart items list is not initialized");
-        }
 
-        ItemCart itemToRemove = null;
-        for (ItemCart item : this.items) {
+    public void removeItem(String productId) {
+        if (productId == null || productId.isEmpty()) {
+            throw new IllegalArgumentException("El productId no puede ser nulo o vacío.");
+        }
+        ItemCart found = null;
+        for (ItemCart item : items) {
             if (item.getProductId().equals(productId)) {
-                itemToRemove = item;
+                found = item;
                 break;
             }
         }
-
-        if (itemToRemove != null) {
-            this.items.remove(itemToRemove);
-            this.totalPrice -= itemToRemove.getPrice() * itemToRemove.getQuantity();
-        } else {
-            throw new IllegalStateException("Item not found in the cart");
+        if (found == null) {
+            throw new IllegalStateException("No existe ningún ítem con productId: " + productId);
         }
+        items.remove(found);
+        totalPrice -= found.getSubtotal();
     }
 
     public void clearCart() {
-        if (this.items == null) {
-            throw new IllegalStateException("Cart items list is not initialized");
-        }
-        this.items.clear();
-        this.totalPrice = 0.0;
+        items.clear();
+        totalPrice = 0.0;
     }
 
     public void updateItemQuantity(String productId, int newQuantity) {
-        if (productId == null || newQuantity <= 0 || this.items == null) {
-            throw new IllegalArgumentException("Invalid product ID, quantity or cart items list is not initialized");
+        if (productId == null || productId.isEmpty()) {
+            throw new IllegalArgumentException("El productId no puede ser nulo o vacío.");
         }
-
-        for (ItemCart item : this.items) {
+        if (newQuantity <= 0) {
+            throw new IllegalArgumentException("La nueva cantidad debe ser mayor a cero.");
+        }
+        ItemCart found = null;
+        for (ItemCart item : items) {
             if (item.getProductId().equals(productId)) {
-                double pricePerUnit = item.getPrice() / item.getQuantity();
-                this.totalPrice -= item.getPrice();
-                item.setQuantity(newQuantity);
-                item.setPrice(pricePerUnit * newQuantity);
-                this.totalPrice += item.getPrice();
-                return;
+                found = item;
+                break;
             }
         }
-
-        throw new IllegalStateException("Item not found in the cart");
+        if (found == null) {
+            throw new IllegalStateException("No existe ningún ítem con productId: " + productId);
+        }
+        totalPrice -= found.getSubtotal();
+        found.setQuantity(newQuantity);
+        totalPrice += found.getSubtotal();
     }
+
+
 }
