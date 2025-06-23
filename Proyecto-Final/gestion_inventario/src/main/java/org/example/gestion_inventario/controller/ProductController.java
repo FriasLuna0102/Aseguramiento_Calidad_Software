@@ -2,6 +2,7 @@ package org.example.gestion_inventario.controller;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityManager;
+import org.example.gestion_inventario.model.dto.ProductUpdateDto;
 import org.example.gestion_inventario.model.entity.Product;
 import org.example.gestion_inventario.services.ProductService;
 import org.hibernate.envers.AuditReader;
@@ -10,9 +11,7 @@ import org.hibernate.envers.query.AuditEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/products")
@@ -34,6 +33,12 @@ public class ProductController {
     public ResponseEntity<Product> create(@RequestBody Product p) {
         Product saved = productService.create(p);
         return ResponseEntity.ok(saved);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Product> update(@PathVariable Long id, @RequestBody ProductUpdateDto dto) {
+        Product updated = productService.update(id, dto);
+        return ResponseEntity.ok(updated);
     }
 
 
