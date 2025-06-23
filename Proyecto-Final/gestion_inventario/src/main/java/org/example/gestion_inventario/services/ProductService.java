@@ -25,5 +25,10 @@ public class ProductService {
         return productRepository.findAll();
     }
 
+    @Timed("products.delete")
+    public void delete(Long id) {
+        productRepository.deleteById(id);
+    }
+
 
 }
