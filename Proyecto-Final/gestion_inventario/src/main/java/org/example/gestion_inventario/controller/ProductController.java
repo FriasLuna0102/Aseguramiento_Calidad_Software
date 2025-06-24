@@ -1,6 +1,8 @@
 package org.example.gestion_inventario.controller;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.EntityManager;
+import org.example.gestion_inventario.model.dto.ProductUpdateDto;
 import org.example.gestion_inventario.model.entity.Product;
 import org.example.gestion_inventario.services.ProductService;
 import org.hibernate.envers.AuditReader;
@@ -31,6 +33,18 @@ public class ProductController {
     public ResponseEntity<Product> create(@RequestBody Product p) {
         Product saved = productService.create(p);
         return ResponseEntity.ok(saved);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Product> update(@PathVariable Long id, @RequestBody ProductUpdateDto dto) {
+        Product updated = productService.update(id, dto);
+        return ResponseEntity.ok(updated);
+    }
+
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Long id) {
+        productService.delete(id);
     }
 
     @GetMapping("/{id}/revisions")
