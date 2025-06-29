@@ -48,6 +48,13 @@ public class ProductService {
         return productRepository.save(existing);
     }
 
+    @Timed("products.getById")
+    public Product findById(Long id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Producto no encontrado"));
+    }
+
 
     @Timed("products.delete")
     public void delete(Long id) {
