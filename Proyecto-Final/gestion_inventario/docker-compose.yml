@@ -58,5 +58,12 @@ services:
     depends_on:
       - prometheus
 
+  frontend:
+    build: ../gestion_inventario_app
+    ports:
+      - "3001:3001"
+    depends_on:
+      - app
+
 volumes:
   db-data:
