@@ -53,9 +53,22 @@ export default function LoginPage() {
         const token = data.token || data.accessToken || data.jwt
         if (token) {
           localStorage.setItem("token", token)
+          
+          // Guardar información del usuario
+          if (data.user) {
+            localStorage.setItem("user", JSON.stringify(data.user))
+          } else if (data.username || data.name) {
+            localStorage.setItem("user", JSON.stringify({
+              username: data.username || formData.username,
+              name: data.name || data.username || formData.username
+            }))
+          }
+          
+          const userName = data.user?.name || data.name || data.username || formData.username
+          
           toast({
             title: "Inicio de sesión exitoso",
-            description: "Bienvenido al sistema de inventario",
+            description: `Bienvenido ${userName} al sistema de inventario`,
           })
           router.push("/products")
           return

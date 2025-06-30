@@ -16,13 +16,25 @@ export default function EditProductPage() {
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [userName, setUserName] = useState("Usuario")
 
-  // Verificar autenticación
+  // Verificar autenticación y obtener información del usuario
   useEffect(() => {
     const token = localStorage.getItem("token")
     if (!token) {
       router.push("/login")
       return
+    }
+
+    // Obtener información del usuario del localStorage
+    const storedUser = localStorage.getItem("user")
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser)
+        setUserName(user.name || user.username || "Usuario")
+      } catch (error) {
+        console.error("Error parsing user data:", error)
+      }
     }
   }, [router])
 
@@ -68,7 +80,7 @@ export default function EditProductPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F5F5F5]">
-        <Header />
+        <Header userName={userName} />
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#007BFF] mx-auto mb-4"></div>
@@ -82,7 +94,7 @@ export default function EditProductPage() {
   if (error || !product) {
     return (
       <div className="min-h-screen bg-[#F5F5F5]">
-        <Header />
+        <Header userName={userName} />
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
@@ -98,7 +110,7 @@ export default function EditProductPage() {
 
   return (
     <div className="min-h-screen bg-[#F5F5F5]">
-      <Header />
+      <Header userName={userName} />
       <ProductForm product={product} isEditing={true} />
     </div>
   )
