@@ -13,37 +13,34 @@ export default function EditProductPage() {
   const router = useRouter()
   const productId = params.id as string
 
+  const [mounted, setMounted] = useState(false)
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userName, setUserName] = useState("Usuario")
 
-  // Verificar autenticación y obtener información del usuario
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    if (!token) {
-      router.push("/login")
-      return
-    }
+    const verifyAndFetchProduct = async () => {
+      setMounted(true) 
 
-    // Obtener información del usuario del localStorage
-    const storedUser = localStorage.getItem("user")
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser)
-        setUserName(user.name || user.username || "Usuario")
-      } catch (error) {
-        console.error("Error parsing user data:", error)
+      const token = localStorage.getItem("token")
+      if (!token) {
+        router.push("/login")
+        return
       }
-    }
-  }, [router])
 
-  useEffect(() => {
-    const fetchProduct = async () => {
+      const storedUser = localStorage.getItem("user")
+      if (storedUser) {
+        try {
+          const user = JSON.parse(storedUser)
+          setUserName(user.name || user.username || "Usuario")
+        } catch (error) {
+          console.error("Error parsing user data:", error)
+        }
+      }
+
       try {
-        const token = localStorage.getItem("token")
-        
-        console.log("Obteniendo producto con ID:", productId) // Debug log
+        console.log("Obteniendo producto con ID:", productId)
 
         const response = await fetch(`http://localhost:8080/api/v1/products/${productId}`, {
           method: "GET",
@@ -53,19 +50,19 @@ export default function EditProductPage() {
           },
         })
 
-        console.log("Response status:", response.status) // Debug log
+        console.log("Response status:", response.status)
 
         if (!response.ok) {
           const errorText = await response.text()
-          console.error("Error response:", errorText) // Debug log
-          throw new Error(`Producto no encontrado: ${response.status} - ${errorText}`)
+          console.error("Error response:", errorText || "(respuesta vacía del servidor)")
+          throw new Error(`Producto no encontrado o error: ${response.status} - ${errorText || "Sin detalles"}`)
         }
 
         const productData: Product = await response.json()
-        console.log("Producto obtenido:", productData) // Debug log
+        console.log("Producto obtenido:", productData)
         setProduct(productData)
       } catch (err) {
-        console.error("Error al obtener producto:", err) // Debug log
+        console.error("Error al obtener producto:", err)
         setError(err instanceof Error ? err.message : "Error desconocido")
       } finally {
         setLoading(false)
@@ -73,9 +70,18 @@ export default function EditProductPage() {
     }
 
     if (productId) {
-      fetchProduct()
+      verifyAndFetchProduct()
     }
-  }, [productId])
+  }, [router, productId])
+
+  // 🔥 Evitar renderizado hasta que el componente esté montado
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#007BFF]"></div>
+      </div>
+    )
+  }
 
   if (loading) {
     return (
