@@ -3,6 +3,7 @@ package org.example.gestion_inventario.controller;
 import org.example.gestion_inventario.model.dto.JwtResponse;
 import org.example.gestion_inventario.model.dto.LoginRequest;
 import org.example.gestion_inventario.config.jwt.utils.JwtUtil;
+import org.example.gestion_inventario.services.JwtServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,6 +12,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Date;
 
 @RestController
 @RequestMapping("/auth")
@@ -21,6 +24,9 @@ public class AuthController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private JwtServices jwtServices;
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
@@ -33,8 +39,10 @@ public class AuthController {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = jwtUtil.generateToken(authentication);
+            Date expirationDate = jwtUtil.getExpirationDateFromJwtToken(jwt);
 
-            return ResponseEntity.ok(new JwtResponse(jwt, loginRequest.getUsername()));
+            JwtResponse jwtResponse = new JwtResponse(jwt, loginRequest.getUsername(), expirationDate);
+            return ResponseEntity.ok(jwtResponse);
         } catch (AuthenticationException e) {
             return ResponseEntity.badRequest()
                     .body("Error: Invalid username or password!");
@@ -56,6 +64,19 @@ public class AuthController {
             }
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error validating token: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) {
+        try {
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+            jwtServices.invalidateToken(token);
+            return ResponseEntity.ok().body("Logged out successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error during logout: " + e.getMessage());
         }
     }
 }

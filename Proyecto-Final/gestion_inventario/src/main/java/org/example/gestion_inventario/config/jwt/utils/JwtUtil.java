@@ -2,6 +2,9 @@ package org.example.gestion_inventario.config.jwt.utils;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.example.gestion_inventario.model.dto.JwtResponse;
+import org.example.gestion_inventario.services.JwtServices;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -26,16 +29,27 @@ public class JwtUtil {
     @Value("${jwt.issuer}")
     private String jwtIssuer;
 
+    private final JwtServices jwtServices;
+
+    public JwtUtil(JwtServices jwtServices) {
+        this.jwtServices = jwtServices;
+    }
+
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
     public String generateToken(Authentication authentication) {
         UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
-        return generateTokenFromUsername(userPrincipal.getUsername(), userPrincipal.getAuthorities()
+        String token = generateTokenFromUsername(userPrincipal.getUsername(), userPrincipal.getAuthorities()
                 .stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList()));
+
+        Date expirationDate = new Date(new Date().getTime() + jwtExpirationMs);
+        jwtServices.saveToken(new JwtResponse(token, userPrincipal.getUsername(), expirationDate));
+
+        return token;
     }
 
     public String generateTokenFromUsername(String username, java.util.List<String> roles) {
@@ -81,17 +95,12 @@ public class JwtUtil {
                     .verifyWith(getSigningKey())
                     .build()
                     .parseSignedClaims(authToken);
-            return true;
-        } catch (MalformedJwtException e) {
-            System.err.println("Invalid JWT token: " + e.getMessage());
-        } catch (ExpiredJwtException e) {
-            System.err.println("JWT token is expired: " + e.getMessage());
-        } catch (UnsupportedJwtException e) {
-            System.err.println("JWT token is unsupported: " + e.getMessage());
-        } catch (IllegalArgumentException e) {
-            System.err.println("JWT claims string is empty: " + e.getMessage());
+
+            return jwtServices.isTokenValid(authToken);
+        } catch (Exception e) {
+            System.err.println("Error validating JWT token: " + e.getMessage());
+            return false;
         }
-        return false;
     }
 
     public Date getExpirationDateFromJwtToken(String token) {
