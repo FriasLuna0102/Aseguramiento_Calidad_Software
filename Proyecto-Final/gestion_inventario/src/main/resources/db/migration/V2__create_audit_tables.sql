@@ -6,13 +6,13 @@ CREATE SEQUENCE IF NOT EXISTS revinfo_seq
     CACHE 1;
 
 CREATE TABLE revinfo (
-                         rev INTEGER PRIMARY KEY DEFAULT nextval('revinfo_seq'),
+                         rev BIGSERIAL PRIMARY KEY,
                          revtstmp BIGINT
 );
 
 CREATE TABLE products_aud (
                               id BIGINT NOT NULL,
-                              rev INTEGER NOT NULL REFERENCES revinfo(rev),
+                              rev BIGINT NOT NULL REFERENCES revinfo(rev),
                               revtype SMALLINT,
                               name VARCHAR(255),
                               description TEXT,

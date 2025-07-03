@@ -1,5 +1,5 @@
 CREATE TABLE products (
-                          id SERIAL PRIMARY KEY,
+                          id BIGSERIAL PRIMARY KEY,  -- Cambia de AUTO_INCREMENT a BIGSERIAL
                           name VARCHAR(255) NOT NULL,
                           description TEXT,
                           category VARCHAR(100),
