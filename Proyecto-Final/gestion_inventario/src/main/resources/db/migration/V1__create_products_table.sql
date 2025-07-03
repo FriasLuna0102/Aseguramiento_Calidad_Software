@@ -4,6 +4,6 @@ CREATE TABLE products (
                           description TEXT,
                           category VARCHAR(100),
                           price NUMERIC(12,2),
-                          quantityInitial INT,
-                          quantityCurrent INT
+                          quantity_initial INT,
+                          quantity_current INT
 );
