@@ -46,6 +46,7 @@ dependencies {
     implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'org.hibernate:hibernate-envers:6.6.15.Final'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     runtimeOnly 'com.h2database:h2'
 
@@ -54,27 +55,100 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
     implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+
+    // Cucumber
+    testImplementation 'io.cucumber:cucumber-java:7.14.0'
+    testImplementation 'io.cucumber:cucumber-spring:7.14.0'
+    testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.14.0'
+    testImplementation 'org.junit.platform:junit-platform-suite:1.10.0'
+    testImplementation 'net.masterthought:cucumber-reporting:5.5.0'
+
+    // Jackson (convertir objetos a JSON)
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind'
+}
+
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+// Configuración específica para Cucumber
+task cucumber() {
+    dependsOn assemble, testClasses
+    doLast {
+        javaexec {
+            mainClass = 'io.cucumber.core.cli.Main'
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            args = [
+                    '--plugin', 'pretty',
+                    '--plugin', 'html:build/cucumber-reports/Cucumber.html',
+                    '--glue', 'org.example.gestion_inventario.bdd.steps',
+                    'src/test/resources/features'
+            ]
+            systemProperty 'spring.profiles.active', 'test'
+        }
+    }
 }
 
 tasks.named('test') {
     useJUnitPlatform()
-
     jvmArgs = [
             '-XX:+EnableDynamicAgentLoading',
             '-Djdk.attach.allowAttachSelf=true'
     ]
-
-    finalizedBy jacocoTestReport
 }
+
+test {
+    useJUnitPlatform {
+        excludeEngines 'cucumber'
+    }
+}
+
+tasks.named('cucumber') {
+    dependsOn assemble, testClasses
+}
+
+task cucumberTests() {
+    dependsOn assemble, testClasses
+    doLast {
+        javaexec {
+            mainClass = 'io.cucumber.core.cli.Main'
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            args = [
+                    '--plugin', 'pretty',
+                    '--plugin', 'html:build/cucumber-reports/Cucumber.html',
+                    '--glue', 'org.example.gestion_inventario.bdd',
+                    'src/test/resources/features'
+            ]
+            systemProperty 'spring.profiles.active', 'test'
+        }
+    }
+}
+
+task testWithJacoco {
+    dependsOn test, jacocoTestReport
+}
+
 
 jacocoTestReport {
     dependsOn test
-    reports {
-        xml.required = true
-        csv.required = false
-        html.required = true
+    executionData.from = fileTree(dir: project.buildDir, includes: [
+            'jacoco/test.exec'
+    ])
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/bdd/**',
+                    '**/*IT.*',
+                    '**/*Steps.*',
+                    '**/CucumberTestConfig.*'
+            ])
+        }))
     }
 }
+
+
 
 jacocoTestCoverageVerification {
     violationRules {
