@@ -3,7 +3,6 @@ package org.example.gestion_inventario.bdd.steps;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
-import io.cucumber.spring.CucumberContextConfiguration;
 import org.example.gestion_inventario.GestionInventarioApplication;
 import org.example.gestion_inventario.model.entity.Product;
 import org.example.gestion_inventario.services.ProductService;
@@ -16,7 +15,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@CucumberContextConfiguration
 @SpringBootTest(classes = GestionInventarioApplication.class)
 public class ProductStepDefs {
 

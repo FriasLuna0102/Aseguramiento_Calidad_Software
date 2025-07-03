@@ -1,5 +1,7 @@
 package org.example.gestion_inventario.config.jwt.utils;
 
+import org.example.gestion_inventario.config.jwt.utils.JwtUtil;
+import org.example.gestion_inventario.services.JwtServices;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.Authentication;
@@ -10,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,10 +22,12 @@ class JwtUtilTest {
 
     private JwtUtil jwtUtil;
     private Authentication authentication;
+    private JwtServices jwtServices;
 
     @BeforeEach
     void setUp() {
-        jwtUtil = new JwtUtil();
+        jwtServices = mock(JwtServices.class);
+        jwtUtil = new JwtUtil(jwtServices);
         ReflectionTestUtils.setField(jwtUtil, "jwtSecret", "yourTestSecretKeyHereThatIsAtLeast256BitsLong");
         ReflectionTestUtils.setField(jwtUtil, "jwtExpirationMs", 86400000);
         ReflectionTestUtils.setField(jwtUtil, "jwtIssuer", "test-issuer");
@@ -34,6 +39,10 @@ class JwtUtilTest {
 
         authentication = mock(Authentication.class);
         when(authentication.getPrincipal()).thenReturn(userDetails);
+
+        // Set up the behavior for mock
+        when(jwtServices.isTokenValid(anyString())).thenReturn(true);
+        doNothing().when(jwtServices).saveToken(any());
     }
 
     @Test
@@ -52,7 +61,7 @@ class JwtUtilTest {
         List<String> roles = jwtUtil.getRolesFromJwtToken(token);
 
         assertNotNull(roles);
-        assertTrue(roles.contains("ROLE_USER"));
+        assertTrue(roles.contains("ROLE_USER")); // Match casing
     }
 
     @Test

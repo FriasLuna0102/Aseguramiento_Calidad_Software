@@ -93,23 +93,62 @@ task cucumber() {
 
 tasks.named('test') {
     useJUnitPlatform()
-
     jvmArgs = [
             '-XX:+EnableDynamicAgentLoading',
             '-Djdk.attach.allowAttachSelf=true'
     ]
-
-    finalizedBy jacocoTestReport
 }
+
+test {
+    useJUnitPlatform {
+        excludeEngines 'cucumber'
+    }
+}
+
+tasks.named('cucumber') {
+    dependsOn assemble, testClasses
+}
+
+task cucumberTests() {
+    dependsOn assemble, testClasses
+    doLast {
+        javaexec {
+            mainClass = 'io.cucumber.core.cli.Main'
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            args = [
+                    '--plugin', 'pretty',
+                    '--plugin', 'html:build/cucumber-reports/Cucumber.html',
+                    '--glue', 'org.example.gestion_inventario.bdd',
+                    'src/test/resources/features'
+            ]
+            systemProperty 'spring.profiles.active', 'test'
+        }
+    }
+}
+
+task testWithJacoco {
+    dependsOn test, jacocoTestReport
+}
+
 
 jacocoTestReport {
     dependsOn test
-    reports {
-        xml.required = true
-        csv.required = false
-        html.required = true
+    executionData.from = fileTree(dir: project.buildDir, includes: [
+            'jacoco/test.exec'
+    ])
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/bdd/**',
+                    '**/*IT.*',
+                    '**/*Steps.*',
+                    '**/CucumberTestConfig.*'
+            ])
+        }))
     }
 }
+
+
 
 jacocoTestCoverageVerification {
     violationRules {
