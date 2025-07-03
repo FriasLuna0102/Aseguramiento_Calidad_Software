@@ -123,6 +123,7 @@ export default function LoginPage() {
                 onChange={handleInputChange}
                 className="border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF]"
                 required
+                data-testid="username"
               />
             </div>
 
@@ -140,6 +141,7 @@ export default function LoginPage() {
                   onChange={handleInputChange}
                   className="border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF] pr-10"
                   required
+                  data-testid="password"
                 />
                 <Button
                   type="button"
@@ -161,6 +163,7 @@ export default function LoginPage() {
               type="submit"
               className="w-full bg-[#007BFF] text-white hover:bg-[#003B73] focus:ring-[#007BFF] transition-all duration-200"
               disabled={isLoading}
+              data-testid="submit"
             >
               {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
             </Button>
