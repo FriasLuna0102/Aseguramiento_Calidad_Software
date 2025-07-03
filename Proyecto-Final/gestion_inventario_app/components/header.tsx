@@ -10,15 +10,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useAuth } from "@/hooks/useAuth"
 
 interface HeaderProps {
   userName?: string
 }
 
 export function Header({ userName = "Usuario" }: HeaderProps) {
-  const handleLogout = () => {
-    localStorage.removeItem("token")
-    window.location.href = "/login"
+  const { logout } = useAuth()
+
+  const handleLogout = async () => {
+    await logout()
   }
 
   return (
