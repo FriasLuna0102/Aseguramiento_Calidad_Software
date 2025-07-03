@@ -1,5 +1,6 @@
 package org.example.gestion_inventario.services;
 
+import io.micrometer.core.annotation.Timed;
 import org.example.gestion_inventario.model.dto.JwtResponse;
 import org.example.gestion_inventario.repository.JwtRepository;
 import org.slf4j.Logger;
@@ -18,11 +19,13 @@ public class JwtServices {
     private static final String REDIS_PREFIX = "jwt:";
     private static final Logger logger = LoggerFactory.getLogger(JwtServices.class);
 
+
     public JwtServices(JwtRepository jwtRepository, RedisTemplate<String, Object> redisTemplate) {
         this.jwtRepository = jwtRepository;
         this.redisTemplate = redisTemplate;
     }
 
+    @Timed("jwt.saveToken")
     public void saveToken(JwtResponse jwtResponse) {
         jwtRepository.save(jwtResponse);
 
@@ -39,6 +42,7 @@ public class JwtServices {
         }
     }
 
+    @Timed("jwt.invalidateToken")
     public void invalidateToken(String token) {
         Optional<JwtResponse> jwtResponse = jwtRepository.findById(token);
         jwtResponse.ifPresent(jwt -> {
@@ -50,6 +54,7 @@ public class JwtServices {
 
     }
 
+    @Timed("jwt.isTokenValid")
     public boolean isTokenValid(String token) {
         try {
             String redisKey = REDIS_PREFIX + token;
@@ -83,6 +88,7 @@ public class JwtServices {
         return isValid;
     }
 
+    @Timed("jwt.getExpirationTime")
     private long getTimeUntilExpiration(Date expirationDate) {
         return Math.max(0, expirationDate.getTime() - System.currentTimeMillis());
     }

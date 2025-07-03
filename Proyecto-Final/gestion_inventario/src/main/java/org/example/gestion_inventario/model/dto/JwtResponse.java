@@ -5,11 +5,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.envers.Audited;
 
 import java.util.Date;
 
 @Entity
 @Table(name = "jwt_tokens")
+@Audited
 @Setter
 @Getter
 public class JwtResponse {
