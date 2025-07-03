@@ -36,6 +36,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
 
   const [errors, setErrors] = useState<Partial<ProductFormData>>({})
   const [isLoading, setIsLoading] = useState(false)
+  const [isFormReady, setIsFormReady] = useState(false)
 
   useEffect(() => {
     if (product && isEditing) {
@@ -46,6 +47,13 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
         price: product.price.toString(),
         quantity: getCurrentQuantity(product).toString(),
       })
+      
+      // Pequeño delay para asegurar que el estado se actualice
+      setTimeout(() => {
+        setIsFormReady(true)
+      }, 100)
+    } else if (!isEditing) {
+      setIsFormReady(true)
     }
   }, [product, isEditing])
 
@@ -217,22 +225,32 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                 <Label htmlFor="category" className="text-[#003B73] font-medium">
                   Categoría *
                 </Label>
-                <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
-                  <SelectTrigger
-                    className={`border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF] ${
-                      errors.category ? "border-red-500" : ""
-                    }`}
+                {isFormReady ? (
+                  <Select 
+                    key={`category-${product?.id || 'new'}-${formData.category}`}
+                    value={formData.category} 
+                    onValueChange={(value) => handleInputChange("category", value)}
                   >
-                    <SelectValue placeholder="Seleccione una categoría" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    <SelectTrigger
+                      className={`border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF] ${
+                        errors.category ? "border-red-500" : ""
+                      }`}
+                    >
+                      <SelectValue placeholder="Seleccione una categoría" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="border border-gray-300 rounded-md px-3 py-2 text-gray-500">
+                    Cargando...
+                  </div>
+                )}
                 {errors.category && <p className="text-red-500 text-sm">{errors.category}</p>}
               </div>
 
