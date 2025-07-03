@@ -74,7 +74,7 @@ export default function EditProductPage() {
     }
   }, [router, productId])
 
-  // 🔥 Evitar renderizado hasta que el componente esté montado
+
   if (!mounted) {
     return (
       <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center">
