@@ -8,7 +8,10 @@
     "dev:clean": "powershell -ExecutionPolicy Bypass -File clean.ps1 && next dev",
     "lint": "next lint",
     "start": "next start",
-    "clean": "powershell -ExecutionPolicy Bypass -File clean.ps1"
+    "clean": "powershell -ExecutionPolicy Bypass -File clean.ps1",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -62,6 +65,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.53.2",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",

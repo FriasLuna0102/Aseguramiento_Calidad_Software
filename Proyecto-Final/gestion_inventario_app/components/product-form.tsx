@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -47,8 +46,6 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
         price: product.price.toString(),
         quantity: getCurrentQuantity(product).toString(),
       })
-      
-      // Pequeño delay para asegurar que el estado se actualice
       setTimeout(() => {
         setIsFormReady(true)
       }, 100)
@@ -168,161 +165,169 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5]">
-      <div className="max-w-2xl mx-auto p-6">
-        <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => router.push("/products")}
-            className="mb-4 text-[#007BFF] hover:text-[#003B73] hover:bg-[#E0F0FF]"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver a Productos
-          </Button>
-        </div>
+      <div className="min-h-screen bg-[#F5F5F5]">
+        <div className="max-w-2xl mx-auto p-6">
+          <div className="mb-6">
+            <Button
+                variant="ghost"
+                onClick={() => router.push("/products")}
+                className="mb-4 text-[#007BFF] hover:text-[#003B73] hover:bg-[#E0F0FF]"
+                data-testid="back-button"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Volver a Productos
+            </Button>
+          </div>
 
-        <Card className="shadow-lg border-0">
-          <CardHeader className="bg-[#007BFF] text-white rounded-t-lg">
-            <CardTitle className="text-xl font-bold">
-              {isEditing ? "Editar Producto" : "Agregar Nuevo Producto"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-[#003B73] font-medium">
-                  Nombre del Producto *
-                </Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  className={`border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF] ${
-                    errors.name ? "border-red-500" : ""
-                  }`}
-                  placeholder="Ingrese el nombre del producto"
-                />
-                {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-[#003B73] font-medium">
-                  Descripción *
-                </Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange("description", e.target.value)}
-                  className={`border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF] min-h-[100px] ${
-                    errors.description ? "border-red-500" : ""
-                  }`}
-                  placeholder="Ingrese la descripción del producto"
-                />
-                {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="category" className="text-[#003B73] font-medium">
-                  Categoría *
-                </Label>
-                {isFormReady ? (
-                  <Select 
-                    key={`category-${product?.id || 'new'}-${formData.category}`}
-                    value={formData.category} 
-                    onValueChange={(value) => handleInputChange("category", value)}
-                  >
-                    <SelectTrigger
+          <Card className="shadow-lg border-0">
+            <CardHeader className="bg-[#007BFF] text-white rounded-t-lg">
+              <CardTitle className="text-xl font-bold">
+                {isEditing ? "Editar Producto" : "Agregar Nuevo Producto"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-6" data-testid="product-form">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-[#003B73] font-medium">
+                    Nombre del Producto *
+                  </Label>
+                  <Input
+                      id="name"
+                      data-testid="product-name"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange("name", e.target.value)}
                       className={`border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF] ${
-                        errors.category ? "border-red-500" : ""
+                          errors.name ? "border-red-500" : ""
                       }`}
-                    >
-                      <SelectValue placeholder="Seleccione una categoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="border border-gray-300 rounded-md px-3 py-2 text-gray-500">
-                    Cargando...
+                      placeholder="Ingrese el nombre del producto"
+                  />
+                  {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="text-[#003B73] font-medium">
+                    Descripción *
+                  </Label>
+                  <Textarea
+                      id="description"
+                      data-testid="product-description"
+                      value={formData.description}
+                      onChange={(e) => handleInputChange("description", e.target.value)}
+                      className={`border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF] min-h-[100px] ${
+                          errors.description ? "border-red-500" : ""
+                      }`}
+                      placeholder="Ingrese la descripción del producto"
+                  />
+                  {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="category" className="text-[#003B73] font-medium">
+                    Categoría *
+                  </Label>
+                  {isFormReady ? (
+                      <Select
+                          data-testid="category-select"
+                          key={`category-${product?.id || 'new'}-${formData.category}`}
+                          value={formData.category}
+                          onValueChange={(value) => handleInputChange("category", value)}
+                      >
+                        <SelectTrigger
+                            className={`border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF] ${
+                                errors.category ? "border-red-500" : ""
+                            }`}
+                        >
+                          <SelectValue placeholder="Seleccione una categoría" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CATEGORIES.map((category) => (
+                              <SelectItem key={category} value={category}>
+                                {category}
+                              </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                  ) : (
+                      <div className="border border-gray-300 rounded-md px-3 py-2 text-gray-500">
+                        Cargando...
+                      </div>
+                  )}
+                  {errors.category && <p className="text-red-500 text-sm">{errors.category}</p>}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="price" className="text-[#003B73] font-medium">
+                      Precio *
+                    </Label>
+                    <Input
+                        id="price"
+                        data-testid="product-price"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.price}
+                        onChange={(e) => handleInputChange("price", e.target.value)}
+                        className={`border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF] ${
+                            errors.price ? "border-red-500" : ""
+                        }`}
+                        placeholder="0.00"
+                    />
+                    {errors.price && <p className="text-red-500 text-sm">{errors.price}</p>}
                   </div>
-                )}
-                {errors.category && <p className="text-red-500 text-sm">{errors.category}</p>}
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="price" className="text-[#003B73] font-medium">
-                    Precio *
-                  </Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.price}
-                    onChange={(e) => handleInputChange("price", e.target.value)}
-                    className={`border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF] ${
-                      errors.price ? "border-red-500" : ""
-                    }`}
-                    placeholder="0.00"
-                  />
-                  {errors.price && <p className="text-red-500 text-sm">{errors.price}</p>}
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity" className="text-[#003B73] font-medium">
+                      Cantidad *
+                    </Label>
+                    <Input
+                        id="quantity"
+                        data-testid="product-quantity"
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={formData.quantity}
+                        onChange={(e) => handleInputChange("quantity", e.target.value)}
+                        className={`border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF] ${
+                            errors.quantity ? "border-red-500" : ""
+                        }`}
+                        placeholder="0"
+                    />
+                    {errors.quantity && <p className="text-red-500 text-sm">{errors.quantity}</p>}
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="quantity" className="text-[#003B73] font-medium">
-                    Cantidad *
-                  </Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={formData.quantity}
-                    onChange={(e) => handleInputChange("quantity", e.target.value)}
-                    className={`border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF] ${
-                      errors.quantity ? "border-red-500" : ""
-                    }`}
-                    placeholder="0"
-                  />
-                  {errors.quantity && <p className="text-red-500 text-sm">{errors.quantity}</p>}
+                <div className="flex justify-end space-x-4 pt-6">
+                  <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => router.push("/products")}
+                      className="bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      disabled={isLoading}
+                      data-testid="cancel-button"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                      type="submit"
+                      className="bg-[#007BFF] text-white hover:bg-[#003B73] focus:ring-[#007BFF]"
+                      disabled={isLoading}
+                      data-testid="submit-button"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {isLoading
+                        ? isEditing
+                            ? "Actualizando..."
+                            : "Guardando..."
+                        : isEditing
+                            ? "Actualizar Producto"
+                            : "Guardar Producto"}
+                  </Button>
                 </div>
-              </div>
-
-              <div className="flex justify-end space-x-4 pt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.push("/products")}
-                  className="bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                  disabled={isLoading}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  className="bg-[#007BFF] text-white hover:bg-[#003B73] focus:ring-[#007BFF]"
-                  disabled={isLoading}
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {isLoading
-                    ? isEditing
-                      ? "Actualizando..."
-                      : "Guardando..."
-                    : isEditing
-                      ? "Actualizar Producto"
-                      : "Guardar Producto"}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
   )
 }
