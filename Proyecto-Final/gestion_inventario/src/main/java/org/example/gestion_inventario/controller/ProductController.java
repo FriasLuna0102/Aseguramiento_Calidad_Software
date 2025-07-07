@@ -12,10 +12,15 @@ import org.example.gestion_inventario.services.ProductService;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.query.AuditEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -34,8 +39,27 @@ public class ProductController {
     @Operation(summary = "Get all products",
             description = "Returns a list of all products in the inventory")
     @GetMapping
-    public List<Product> all() {
-        return productService.listAll();
+    public ResponseEntity<Page<Product>> all(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.Direction.fromString(direction),
+                sortBy
+        );
+
+        Page<Product> products = productService.findAllWithFilters(
+                category, name, minPrice, maxPrice, pageable
+        );
+        return ResponseEntity.ok(products);
     }
 
 

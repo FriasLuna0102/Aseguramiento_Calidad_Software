@@ -6,15 +6,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.gestion_inventario.model.dto.ProductDto;
 import org.example.gestion_inventario.model.entity.Product;
 import org.example.gestion_inventario.repository.ProductRepository;
+import org.example.gestion_inventario.specification.ProductSpecification;
 import org.hibernate.service.spi.ServiceException;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
+
 
 @Service
 @Slf4j
@@ -45,9 +47,30 @@ public class ProductService {
     }
 
     @Timed("products.list")
-    public List<Product> listAll() {
+    public Page<Product> findAllWithFilters(
+            String category,
+            String name,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            Pageable pageable
+    ) {
         try {
-            return productRepository.findAll();
+            Specification<Product> spec = Specification.allOf();
+
+            if (category != null) {
+                spec = spec.and(ProductSpecification.hasCategory(category));
+            }
+            if (name != null) {
+                spec = spec.and(ProductSpecification.nameLike(name));
+            }
+            if (minPrice != null) {
+                spec = spec.and(ProductSpecification.priceGreaterThan(minPrice));
+            }
+            if (maxPrice != null) {
+                spec = spec.and(ProductSpecification.priceLessThan(maxPrice));
+            }
+
+            return productRepository.findAll(spec, pageable);
         } catch (Exception e) {
             log.error("Error listing products: ", e);
             throw new ServiceException("Error fetching products", e);
