@@ -26,7 +26,6 @@ public class ProductDto {
     @Digits(integer = 10, fraction = 2, message = "Price must have at most 10 digits and 2 decimals")
     private BigDecimal price;
 
-    @NotNull(message = "Initial quantity cannot be null")
     @Min(value = 0, message = "Initial quantity must be greater than or equal to 0")
     @Max(value = 999999, message = "Initial quantity must be less than 1000000")
     private Integer quantityInitial;

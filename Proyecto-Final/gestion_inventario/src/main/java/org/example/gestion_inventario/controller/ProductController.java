@@ -1,13 +1,18 @@
 package org.example.gestion_inventario.controller;
 
-import jakarta.persistence.Column;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityManager;
-import org.example.gestion_inventario.model.dto.ProductUpdateDto;
+import jakarta.validation.Valid;
+import org.example.gestion_inventario.model.dto.ProductDto;
 import org.example.gestion_inventario.model.entity.Product;
 import org.example.gestion_inventario.services.ProductService;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.query.AuditEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,7 +20,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/products")
+@Tag(name = "Product Controller", description = "Endpoints for managing products")
 public class ProductController {
+
     private final ProductService productService;
     private final EntityManager em;
 
@@ -24,32 +31,63 @@ public class ProductController {
         this.em = em;
     }
 
+    @Operation(summary = "Get all products",
+            description = "Returns a list of all products in the inventory")
     @GetMapping
     public List<Product> all() {
         return productService.listAll();
     }
 
+
+    @Operation(summary = "Create a new product",
+            description = "Creates a new product with the provided information")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Product created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     @PostMapping
-    public ResponseEntity<Product> create(@RequestBody Product p) {
-        Product saved = productService.create(p);
-        return ResponseEntity.ok(saved);
+    public ResponseEntity<Product> create(@Valid @RequestBody ProductDto dto) {
+        Product saved = productService.create(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
+    @Operation(summary = "Update a product",
+            description = "Updates an existing product with the provided information")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Product updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Product not found"),
+            @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
     @PutMapping("/{id}")
-    public ResponseEntity<Product> update(@PathVariable Long id, @RequestBody ProductUpdateDto dto) {
+    public ResponseEntity<Product> update(@PathVariable Long id, @Valid @RequestBody ProductDto dto) {
         Product updated = productService.update(id, dto);
         return ResponseEntity.ok(updated);
     }
 
+
+    @Operation(summary = "Get a product by ID",
+            description = "Returns a product based on the provided ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Product found"),
+            @ApiResponse(responseCode = "404", description = "Product not found")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<Product> getById(@PathVariable Long id) {
         Product product = productService.findById(id);
         return ResponseEntity.ok(product);
     }
 
+
+    @Operation(summary = "Delete a product",
+            description = "Deletes a product based on the provided ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Product deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Product not found")
+    })
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         productService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/revisions")
