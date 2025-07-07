@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 
-class ProductUpdateDtoTest {
+class ProductDtoTest {
 
     private Validator validator;
 
@@ -20,7 +20,7 @@ class ProductUpdateDtoTest {
 
     @Test
     void testValidProductUpdateDto() {
-        ProductUpdateDto dto = new ProductUpdateDto();
+        ProductDto dto = new ProductDto();
         dto.setName("Test Product");
         dto.setPrice(BigDecimal.valueOf(100));
         dto.setDescription("Test Description");
@@ -41,7 +41,7 @@ class ProductUpdateDtoTest {
 
     @Test
     void testInvalidProductUpdateDto_BlankName() {
-        ProductUpdateDto dto = new ProductUpdateDto();
+        ProductDto dto = new ProductDto();
         dto.setName("");
         dto.setPrice(BigDecimal.valueOf(100));
 
@@ -54,7 +54,7 @@ class ProductUpdateDtoTest {
 
     @Test
     void testInvalidProductUpdateDto_NullName() {
-        ProductUpdateDto dto = new ProductUpdateDto();
+        ProductDto dto = new ProductDto();
         dto.setName(null);
 
         var violations = validator.validate(dto);
@@ -64,7 +64,7 @@ class ProductUpdateDtoTest {
 
     @Test
     void testProductUpdateDto_NullableFields() {
-        ProductUpdateDto dto = new ProductUpdateDto();
+        ProductDto dto = new ProductDto();
         dto.setName("Test Product");
 
         var violations = validator.validate(dto);
@@ -79,7 +79,7 @@ class ProductUpdateDtoTest {
 
     @Test
     void testProductUpdateDto_SetAndGetAll() {
-        ProductUpdateDto dto = new ProductUpdateDto();
+        ProductDto dto = new ProductDto();
 
         dto.setName("New Product");
         dto.setPrice(BigDecimal.valueOf(200));
