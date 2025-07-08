@@ -10,6 +10,16 @@ export interface Product {
   updatedAt?: string
 }
 
+export interface PaginatedProducts {
+  content: Product[]
+  totalPages: number
+  totalElements: number
+  size: number
+  number: number
+  last: boolean
+  first: boolean
+}
+
 export interface ProductFormData {
   name: string
   description: string

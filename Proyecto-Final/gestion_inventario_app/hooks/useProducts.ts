@@ -1,28 +1,33 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { Product } from "@/types/product"
+import type { Product, PaginatedProducts } from "@/types/product"
 
 export function useProducts() {
-  const [products, setProducts] = useState<Product[]>([])
+  const [products, setProducts] = useState<PaginatedProducts>({
+    content: [],
+    totalPages: 0,
+    totalElements: 0,
+    size: 10,
+    number: 0,
+    last: true,
+    first: true
+  })
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
 
-  // Evitar problemas de hidratación
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  const fetchProducts = async () => {
+  const fetchProducts = async (page = currentPage, size = pageSize) => {
     if (!mounted) return
-    
+
     try {
       setLoading(true)
       setError(null)
 
       const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null
-      const response = await fetch("http://localhost:8080/api/v1/products", {
+      const response = await fetch(`http://localhost:8080/api/v1/products?page=${page}&size=${size}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -34,13 +39,22 @@ export function useProducts() {
         throw new Error(`Error al cargar productos: ${response.status}`)
       }
 
-      const data: Product[] = await response.json()
+      const data: PaginatedProducts = await response.json()
       console.log("Productos cargados desde API:", data)
       setProducts(data)
+      setCurrentPage(page)
     } catch (err) {
       console.error("Error al cargar productos:", err)
       setError(err instanceof Error ? err.message : "Error desconocido")
-      setProducts([])
+      setProducts({
+        content: [],
+        totalPages: 0,
+        totalElements: 0,
+        size: 10,
+        number: 0,
+        last: true,
+        first: true
+      })
     } finally {
       setLoading(false)
     }
@@ -49,9 +63,9 @@ export function useProducts() {
   const addProduct = async (productData: Omit<Product, "id" | "createdAt" | "updatedAt">) => {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null
-      
-      console.log("Enviando producto:", productData) // Debug log
-      
+
+      console.log("Enviando producto:", productData)
+
       const response = await fetch("http://localhost:8080/api/v1/products", {
         method: "POST",
         headers: {
@@ -68,8 +82,14 @@ export function useProducts() {
       }
 
       const newProduct: Product = await response.json()
-      console.log("Producto creado:", newProduct) // Debug log
-      setProducts((prev) => [...prev, newProduct])
+      console.log("Producto creado:", newProduct)
+
+      setProducts(prev => ({
+        ...prev,
+        content: [...prev.content, newProduct],
+        totalElements: prev.totalElements + 1
+      }))
+
       return newProduct
     } catch (err) {
       console.error("Error en addProduct:", err)
@@ -80,9 +100,9 @@ export function useProducts() {
   const updateProduct = async (id: string, productData: Partial<Product>) => {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null
-      
-      console.log("Actualizando producto:", id, productData) // Debug log
-      
+
+      console.log("Actualizando producto:", id, productData)
+
       const response = await fetch(`http://localhost:8080/api/v1/products/${id}`, {
         method: "PUT",
         headers: {
@@ -99,8 +119,13 @@ export function useProducts() {
       }
 
       const updatedProduct: Product = await response.json()
-      console.log("Producto actualizado:", updatedProduct) // Debug log
-      setProducts((prev) => prev.map((p) => (p.id === id ? updatedProduct : p)))
+      console.log("Producto actualizado:", updatedProduct)
+
+      setProducts(prev => ({
+        ...prev,
+        content: prev.content.map(p => p.id === id ? updatedProduct : p)
+      }))
+
       return updatedProduct
     } catch (err) {
       console.error("Error en updateProduct:", err)
@@ -123,14 +148,18 @@ export function useProducts() {
         throw new Error(`Error al eliminar producto: ${response.status}`)
       }
 
-      setProducts((prev) => prev.filter((p) => p.id !== id))
+      setProducts(prev => ({
+        ...prev,
+        content: prev.content.filter(p => p.id !== id),
+        totalElements: prev.totalElements - 1
+      }))
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : "Error desconocido")
     }
   }
 
   const getProductById = (id: string): Product | undefined => {
-    return products.find((product) => product.id === id)
+    return products.content.find(product => product.id === id)
   }
 
   useEffect(() => {
@@ -139,10 +168,18 @@ export function useProducts() {
     }
   }, [mounted])
 
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   return {
     products,
     loading,
     error,
+    currentPage,
+    pageSize,
+    setCurrentPage, 
+    setPageSize,
     fetchProducts,
     addProduct,
     updateProduct,
@@ -150,4 +187,3 @@ export function useProducts() {
     getProductById,
   }
 }
-
