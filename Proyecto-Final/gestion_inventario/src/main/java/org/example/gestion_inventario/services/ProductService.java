@@ -4,9 +4,11 @@ import io.micrometer.core.annotation.Timed;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.example.gestion_inventario.model.dto.ProductDto;
+import org.example.gestion_inventario.model.dto.ProductResponse;
 import org.example.gestion_inventario.model.entity.Product;
 import org.example.gestion_inventario.repository.ProductRepository;
 import org.example.gestion_inventario.specification.ProductSpecification;
+import org.example.gestion_inventario.utils.ProductMapper;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
@@ -22,9 +24,11 @@ import org.springframework.data.domain.Pageable;
 @Slf4j
 public class ProductService {
     private final ProductRepository productRepository;
+    private final ProductMapper productMapper;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, ProductMapper productMapper) {
         this.productRepository = productRepository;
+        this.productMapper = productMapper;
     }
 
     @Timed("products.create")
@@ -47,7 +51,7 @@ public class ProductService {
     }
 
     @Timed("products.list")
-    public Page<Product> findAllWithFilters(
+    public Page<ProductResponse> findAllWithFilters(
             String category,
             String searchTerm,
             BigDecimal minPrice,
@@ -70,7 +74,8 @@ public class ProductService {
                 spec = spec.and(ProductSpecification.priceLessThan(maxPrice));
             }
 
-            return productRepository.findAll(spec, pageable);
+            Page<Product> productsPage = productRepository.findAll(spec, pageable);
+            return productsPage.map(productMapper::toResponse);
         } catch (Exception e) {
             log.error("Error listing products: ", e);
             throw new ServiceException("Error fetching products", e);
@@ -108,10 +113,11 @@ public class ProductService {
     }
 
     @Timed("products.getById")
-    public Product findById(Long id) {
+    public ProductResponse findById(Long id) {
         try {
-            return productRepository.findById(id)
+            Product product = productRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + id));
+            return productMapper.toResponse(product);
         } catch (EntityNotFoundException e) {
             throw e;
         } catch (Exception e) {

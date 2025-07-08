@@ -1,4 +1,4 @@
-package org.example.gestion_inventario.exception;
+package org.example.gestion_inventario.utils.exception;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.apache.coyote.BadRequestException;

@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityManager;
 import jakarta.validation.Valid;
 import org.example.gestion_inventario.model.dto.ProductDto;
+import org.example.gestion_inventario.model.dto.ProductResponse;
 import org.example.gestion_inventario.model.entity.Product;
 import org.example.gestion_inventario.services.ProductService;
 import org.hibernate.envers.AuditReader;
@@ -39,7 +40,7 @@ public class ProductController {
     @Operation(summary = "Get all products",
             description = "Returns a list of all products in the inventory")
     @GetMapping
-    public ResponseEntity<Page<Product>> all(
+    public ResponseEntity<Page<ProductResponse>> all(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String searchTerm,
             @RequestParam(required = false) BigDecimal minPrice,
@@ -56,7 +57,7 @@ public class ProductController {
                 sortBy
         );
 
-        Page<Product> products = productService.findAllWithFilters(
+        Page<ProductResponse> products = productService.findAllWithFilters(
                 category, searchTerm, minPrice, maxPrice, pageable
         );
         return ResponseEntity.ok(products);
@@ -96,8 +97,8 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "Product not found")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getById(@PathVariable Long id) {
-        Product product = productService.findById(id);
+    public ResponseEntity<ProductResponse> getById(@PathVariable Long id) {
+        ProductResponse product = productService.findById(id);
         return ResponseEntity.ok(product);
     }
 
