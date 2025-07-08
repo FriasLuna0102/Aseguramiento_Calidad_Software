@@ -26,4 +26,17 @@ public class ProductSpecification {
         return (root, query, cb) ->
                 price == null ? null : cb.lessThan(root.get("price"), price);
     }
+
+    public static Specification<Product> searchInNameOrDescription(String searchTerm) {
+        return (root, query, cb) -> {
+            if (searchTerm == null || searchTerm.trim().isEmpty()) {
+                return null;
+            }
+            String searchTermLower = "%" + searchTerm.toLowerCase() + "%";
+            return cb.or(
+                    cb.like(cb.lower(root.get("name")), searchTermLower),
+                    cb.like(cb.lower(root.get("description")), searchTermLower)
+            );
+        };
+    }
 }

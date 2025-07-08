@@ -41,7 +41,7 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<Page<Product>> all(
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String searchTerm,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(defaultValue = "0") int page,
@@ -57,7 +57,7 @@ public class ProductController {
         );
 
         Page<Product> products = productService.findAllWithFilters(
-                category, name, minPrice, maxPrice, pageable
+                category, searchTerm, minPrice, maxPrice, pageable
         );
         return ResponseEntity.ok(products);
     }

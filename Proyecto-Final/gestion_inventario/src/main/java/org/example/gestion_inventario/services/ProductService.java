@@ -49,7 +49,7 @@ public class ProductService {
     @Timed("products.list")
     public Page<Product> findAllWithFilters(
             String category,
-            String name,
+            String searchTerm,
             BigDecimal minPrice,
             BigDecimal maxPrice,
             Pageable pageable
@@ -60,8 +60,8 @@ public class ProductService {
             if (category != null) {
                 spec = spec.and(ProductSpecification.hasCategory(category));
             }
-            if (name != null) {
-                spec = spec.and(ProductSpecification.nameLike(name));
+            if (searchTerm != null) {
+                spec = spec.and(ProductSpecification.searchInNameOrDescription(searchTerm));
             }
             if (minPrice != null) {
                 spec = spec.and(ProductSpecification.priceGreaterThan(minPrice));

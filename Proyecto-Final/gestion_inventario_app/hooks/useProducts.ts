@@ -19,28 +19,48 @@ export function useProducts() {
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
 
-  const fetchProducts = async (page = currentPage, size = pageSize) => {
+  const fetchProducts = async (
+      page = currentPage,
+      size = pageSize,
+      searchTerm?: string,
+      category?: string
+  ) => {
     if (!mounted) return
 
     try {
       setLoading(true)
       setError(null)
 
-      const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null
-      const response = await fetch(`http://localhost:8080/api/v1/products?page=${page}&size=${size}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
       })
+
+      if (searchTerm && searchTerm.trim() !== '') {
+        params.append('name', searchTerm.trim())
+      }
+
+      if (category && category !== 'all') {
+        params.append('category', category)
+      }
+
+      const token = localStorage.getItem("token")
+      const response = await fetch(
+          `http://localhost:8080/api/v1/products?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+          }
+      )
 
       if (!response.ok) {
         throw new Error(`Error al cargar productos: ${response.status}`)
       }
 
       const data: PaginatedProducts = await response.json()
-      console.log("Productos cargados desde API:", data)
       setProducts(data)
       setCurrentPage(page)
     } catch (err) {
@@ -59,6 +79,7 @@ export function useProducts() {
       setLoading(false)
     }
   }
+
 
   const addProduct = async (productData: Omit<Product, "id" | "createdAt" | "updatedAt">) => {
     try {

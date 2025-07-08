@@ -12,11 +12,11 @@ import { useToast } from "@/hooks/use-toast"
 import { Header } from "@/components/header"
 import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal"
 import { useProducts } from "@/hooks/useProducts"
-import { type Product, CATEGORIES } from "@/types/product"
+import { type Product, CATEGORIES, PaginatedProducts } from "@/types/product"
 import { getCurrentQuantity } from "@/lib/productUtils"
 import { Search, Plus, Edit, Trash2, Package, TrendingUp, AlertTriangle, Filter } from "lucide-react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-
+import { useDebounce } from "@/hooks/useDebounce"
 
 export default function ProductsPage() {
   const router = useRouter()
@@ -30,14 +30,34 @@ export default function ProductsPage() {
     currentPage,
     pageSize
   } = useProducts()
+
   const [mounted, setMounted] = useState(false)
   const [userName, setUserName] = useState("Usuario")
-  
-  
+  const [searchTerm, setSearchTerm] = useState("")
+  const [categoryFilter, setCategoryFilter] = useState("all")
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchResults, setSearchResults] = useState<PaginatedProducts>({
+    content: [],
+    totalPages: 0,
+    totalElements: 0,
+    size: 10,
+    number: 0,
+    last: true,
+    first: true
+  })
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean
+    product: Product | null
+  }>({ isOpen: false, product: null })
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const debouncedCategory = useDebounce(categoryFilter, 300)
+
   // Evitar problemas de hidratación
   useEffect(() => {
     setMounted(true)
-    
+
     // Obtener información del usuario del localStorage
     const storedUser = localStorage.getItem("user")
     if (storedUser) {
@@ -75,43 +95,99 @@ export default function ProductsPage() {
     }
   }, [])
 
-  const [searchTerm, setSearchTerm] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState("all")
-  const [deleteModal, setDeleteModal] = useState<{
-    isOpen: boolean
-    product: Product | null
-  }>({ isOpen: false, product: null })
-  const [isDeleting, setIsDeleting] = useState(false)
+  // Efecto para la búsqueda
+  useEffect(() => {
+    let isActive = true;
 
-  const filteredProducts = useMemo(() => {
-    if (!products?.content) return []
+    const performSearch = async () => {
+      if (!mounted) return;
+      setIsSearching(true);
 
-    return products.content.filter((product) => {
-      const matchesSearch =
-          product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          product.description.toLowerCase().includes(searchTerm.toLowerCase())
+      try {
+        const params = new URLSearchParams({
+          page: "0",
+          size: pageSize.toString(),
+        });
 
-      const matchesCategory = !categoryFilter || categoryFilter === "all" || product.category === categoryFilter
+        if (debouncedSearchTerm.trim() !== '') {
+          params.append('searchTerm', debouncedSearchTerm.trim());
+        }
 
-      return matchesSearch && matchesCategory
-    })
-  }, [products, searchTerm, categoryFilter])
+        if (debouncedCategory !== 'all') {
+          params.append('category', debouncedCategory);
+        }
+
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+            `http://localhost:8080/api/v1/products?${params.toString()}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                ...(token && { Authorization: `Bearer ${token}` }),
+              },
+            }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Error al buscar productos: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (isActive) {
+          setSearchResults(data);
+        }
+      } catch (error) {
+        console.error("Error en la búsqueda:", error);
+        toast({
+          title: "Error",
+          description: "Error al buscar productos",
+          variant: "destructive",
+        });
+      } finally {
+        if (isActive) {
+          setIsSearching(false);
+        }
+      }
+    };
+
+    performSearch();
+
+    return () => {
+      isActive = false;
+    };
+  }, [debouncedSearchTerm, debouncedCategory, mounted, pageSize]);
 
   const stats = useMemo(() => {
-    const productsArray = products?.content || []
-    const totalProducts = products?.totalElements || 0
-    const totalValue = productsArray.reduce((sum, product) => {
+    const displayedProducts = (debouncedSearchTerm || debouncedCategory !== 'all')
+        ? searchResults.content
+        : products.content;
+
+    const totalProducts = (debouncedSearchTerm || debouncedCategory !== 'all')
+        ? searchResults.totalElements
+        : products.totalElements;
+
+    const totalValue = displayedProducts.reduce((sum, product) => {
       return sum + (product.price * getCurrentQuantity(product))
     }, 0)
-    const lowStockProducts = productsArray.filter((product) => getCurrentQuantity(product) < 10).length
+
+    const lowStockProducts = displayedProducts.filter((product) => getCurrentQuantity(product) < 10).length
 
     return { totalProducts, totalValue, lowStockProducts }
-  }, [products])
+  }, [products, searchResults, debouncedSearchTerm, debouncedCategory])
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value)
+  }
+
+  const handleCategoryChange = (value: string) => {
+    setCategoryFilter(value)
+  }
 
   const handlePageChange = async (newPage: number) => {
     try {
-      await fetchProducts(newPage, pageSize)
+      await fetchProducts(newPage, pageSize, searchTerm, categoryFilter)
     } catch (error) {
       toast({
         title: "Error",
@@ -121,7 +197,6 @@ export default function ProductsPage() {
     }
   }
 
-  
   const handleDeleteClick = (product: Product) => {
     setDeleteModal({ isOpen: true, product })
   }
@@ -153,56 +228,61 @@ export default function ProductsPage() {
       return <Badge variant="destructive">Sin Stock</Badge>
     } else if (quantity < 10) {
       return (
-        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-          Stock Bajo
-        </Badge>
+          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+            Stock Bajo
+          </Badge>
       )
     } else {
       return (
-        <Badge variant="secondary" className="bg-green-100 text-green-800">
-          En Stock
-        </Badge>
+          <Badge variant="secondary" className="bg-green-100 text-green-800">
+            En Stock
+          </Badge>
       )
     }
   }
 
+  // Determinar qué productos mostrar
+  const displayedProducts = (debouncedSearchTerm || debouncedCategory !== 'all')
+      ? searchResults
+      : products;
+
   // Evitar renderizado hasta que el componente esté mounted
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#007BFF]"></div>
-      </div>
+        <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#007BFF]"></div>
+        </div>
     )
   }
 
-  if (loading) {
+  if (loading && !isSearching) {
     return (
-      <div className="min-h-screen bg-[#F5F5F5]">
-        <Header userName={userName} />
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#007BFF] mx-auto mb-4"></div>
-            <p className="text-[#003B73]">Cargando productos...</p>
+        <div className="min-h-screen bg-[#F5F5F5]">
+          <Header userName={userName} />
+          <div className="flex items-center justify-center h-96">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#007BFF] mx-auto mb-4"></div>
+              <p className="text-[#003B73]">Cargando productos...</p>
+            </div>
           </div>
         </div>
-      </div>
     )
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#F5F5F5]">
-        <Header userName={userName} />
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={() => window.location.reload()} className="bg-[#007BFF] hover:bg-[#003B73]">
-              Reintentar
-            </Button>
+        <div className="min-h-screen bg-[#F5F5F5]">
+          <Header userName={userName} />
+          <div className="flex items-center justify-center h-96">
+            <div className="text-center">
+              <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <p className="text-red-600 mb-4">{error}</p>
+              <Button onClick={() => window.location.reload()} className="bg-[#007BFF] hover:bg-[#003B73]">
+                Reintentar
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
     )
   }
 
@@ -277,19 +357,29 @@ export default function ProductsPage() {
               {/* Filters */}
               <div className="flex flex-col md:flex-row gap-4 mb-6">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"/>
                   <Input
+                      key="search-input"
                       placeholder="Buscar productos por nombre o descripción..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={handleSearchChange}
                       className="pl-10 border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF]"
+                      autoComplete="off"
                   />
+                  {isSearching && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#007BFF]"></div>
+                      </div>
+                  )}
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Filter className="w-4 h-4 text-gray-500" />
-                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <Filter className="w-4 h-4 text-gray-500"/>
+                  <Select
+                      value={categoryFilter}
+                      onValueChange={handleCategoryChange}
+                  >
                     <SelectTrigger className="w-48 border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF]">
-                      <SelectValue placeholder="Filtrar por categoría" />
+                      <SelectValue placeholder="Filtrar por categoría"/>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todas las categorías</SelectItem>
@@ -304,23 +394,23 @@ export default function ProductsPage() {
               </div>
 
               {/* Products Table */}
-              {filteredProducts.length === 0 ? (
+              {displayedProducts.content.length === 0 ? (
                   <div className="text-center py-12">
-                    <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <Package className="w-16 h-16 text-gray-300 mx-auto mb-4"/>
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      {products.content.length === 0 ? "No hay productos" : "No se encontraron productos"}
+                      {displayedProducts.totalElements === 0 ? "No hay productos" : "No se encontraron productos"}
                     </h3>
                     <p className="text-gray-500 mb-6">
-                      {products.content.length === 0
+                      {displayedProducts.totalElements === 0
                           ? "Comienza agregando tu primer producto al inventario."
                           : "Intenta ajustar los filtros de búsqueda."}
                     </p>
-                    {products.content.length === 0 && (
+                    {displayedProducts.totalElements === 0 && (
                         <Button
                             onClick={() => router.push("/products/add")}
                             className="bg-[#007BFF] text-white hover:bg-[#003B73]"
                         >
-                          <Plus className="w-4 h-4 mr-2" />
+                          <Plus className="w-4 h-4 mr-2"/>
                           Agregar Primer Producto
                         </Button>
                     )}
@@ -341,7 +431,7 @@ export default function ProductsPage() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {filteredProducts.map((product) => (
+                          {displayedProducts.content.map((product) => (
                               <TableRow key={product.id} className="hover:bg-[#E0F0FF] transition-colors">
                                 <TableCell className="font-medium text-[#003B73]">{product.name}</TableCell>
                                 <TableCell className="text-gray-600 max-w-xs truncate">{product.description}</TableCell>
@@ -351,7 +441,7 @@ export default function ProductsPage() {
                                   </Badge>
                                 </TableCell>
                                 <TableCell className="font-medium text-[#003B73]">
-                                  ${product.price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                                  ${product.price.toLocaleString("en-US", {minimumFractionDigits: 2})}
                                 </TableCell>
                                 <TableCell className="font-medium">{getCurrentQuantity(product)}</TableCell>
                                 <TableCell>{getStockBadge(getCurrentQuantity(product))}</TableCell>
@@ -363,7 +453,7 @@ export default function ProductsPage() {
                                         onClick={() => router.push(`/products/edit/${product.id}`)}
                                         className="text-[#007BFF] hover:text-[#003B73] hover:bg-[#E0F0FF]"
                                     >
-                                      <Edit className="w-4 h-4" />
+                                      <Edit className="w-4 h-4"/>
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -371,7 +461,7 @@ export default function ProductsPage() {
                                         onClick={() => handleDeleteClick(product)}
                                         className="text-red-600 hover:text-red-800 hover:bg-red-50"
                                     >
-                                      <Trash2 className="w-4 h-4" />
+                                      <Trash2 className="w-4 h-4"/>
                                     </Button>
                                   </div>
                                 </TableCell>
@@ -384,7 +474,7 @@ export default function ProductsPage() {
                     {/* Pagination */}
                     <div className="mt-4 flex items-center justify-between">
                       <div className="text-sm text-gray-600">
-                        Mostrando {products.content.length} de {products.totalElements} productos
+                        Mostrando {displayedProducts.content.length} de {displayedProducts.totalElements} productos
                       </div>
                       <div className="flex items-center space-x-2">
                         <Button
@@ -393,9 +483,9 @@ export default function ProductsPage() {
                             onClick={() => handlePageChange(currentPage - 1)}
                             disabled={currentPage === 0}
                         >
-                          <ChevronLeft className="h-4 w-4" />
+                          <ChevronLeft className="h-4 w-4"/>
                         </Button>
-                        {Array.from({ length: products.totalPages }, (_, i) => (
+                        {Array.from({length: displayedProducts.totalPages}, (_, i) => (
                             <Button
                                 key={i}
                                 variant={currentPage === i ? "default" : "outline"}
@@ -409,9 +499,9 @@ export default function ProductsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handlePageChange(currentPage + 1)}
-                            disabled={currentPage === products.totalPages - 1}
+                            disabled={currentPage === displayedProducts.totalPages - 1}
                         >
-                          <ChevronRight className="h-4 w-4" />
+                          <ChevronRight className="h-4 w-4"/>
                         </Button>
                       </div>
                     </div>
@@ -424,10 +514,11 @@ export default function ProductsPage() {
         {/* Delete Confirmation Modal */}
         <DeleteConfirmationModal
             isOpen={deleteModal.isOpen}
-            onClose={() => setDeleteModal({ isOpen: false, product: null })}
+            onClose={() => setDeleteModal({isOpen: false, product: null})}
             onConfirm={handleDeleteConfirm}
             productName={deleteModal.product ? deleteModal.product.name : ""}
             isLoading={isDeleting}
         />
       </div>
-  )}
+  )
+}
