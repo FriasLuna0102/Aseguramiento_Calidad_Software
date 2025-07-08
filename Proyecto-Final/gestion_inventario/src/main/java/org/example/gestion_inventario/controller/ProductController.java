@@ -71,10 +71,11 @@ public class ProductController {
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PostMapping
-    public ResponseEntity<Product> create(@Valid @RequestBody ProductDto dto) {
-        Product saved = productService.create(dto);
+    public ResponseEntity<ProductResponse> create(@Valid @RequestBody ProductDto dto) {
+        ProductResponse saved = productService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
+
 
     @Operation(summary = "Update a product",
             description = "Updates an existing product with the provided information")
@@ -84,8 +85,8 @@ public class ProductController {
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Product> update(@PathVariable Long id, @Valid @RequestBody ProductDto dto) {
-        Product updated = productService.update(id, dto);
+    public ResponseEntity<ProductResponse> update(@PathVariable Long id, @Valid @RequestBody ProductDto dto) {
+        ProductResponse updated = productService.update(id, dto);
         return ResponseEntity.ok(updated);
     }
 

@@ -1,7 +1,7 @@
 package org.example.gestion_inventario.controller;
 
 import org.example.gestion_inventario.config.jwt.utils.JwtUtil;
-import org.example.gestion_inventario.model.dto.JwtResponse;
+import org.example.gestion_inventario.model.entity.JwtResponse;
 import org.example.gestion_inventario.model.dto.LoginRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

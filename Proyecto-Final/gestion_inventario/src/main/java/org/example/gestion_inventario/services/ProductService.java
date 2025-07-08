@@ -33,7 +33,7 @@ public class ProductService {
 
     @Timed("products.create")
     @Transactional
-    public Product create(ProductDto dto) {
+    public ProductResponse create(ProductDto dto) {
         try {
             Product product = new Product();
             product.setName(dto.getName());
@@ -43,7 +43,8 @@ public class ProductService {
             product.setQuantityInitial(dto.getQuantityInitial());
             product.setQuantityCurrent(dto.getQuantityCurrent());
 
-            return productRepository.save(product);
+            Product saved = productRepository.save(product);
+            return productMapper.toResponse(saved);
         } catch (Exception e) {
             log.error("Error creating product: ", e);
             throw new ServiceException("Error creating product", e);
@@ -84,7 +85,7 @@ public class ProductService {
 
     @Timed("products.update")
     @Transactional
-    public Product update(Long id, ProductDto dto) {
+    public ProductResponse update(Long id, ProductDto dto) {
         try {
             Product existing = productRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + id));
@@ -102,8 +103,8 @@ public class ProductService {
             Optional.ofNullable(dto.getQuantityCurrent())
                     .ifPresent(existing::setQuantityCurrent);
 
-
-            return productRepository.save(existing);
+            Product saved = productRepository.save(existing);
+            return productMapper.toResponse(saved);
         } catch (EntityNotFoundException e) {
             throw e;
         } catch (Exception e) {

@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ProductDtoTest {
-
     private Validator validator;
 
     @BeforeEach
@@ -44,37 +43,53 @@ class ProductDtoTest {
         ProductDto dto = new ProductDto();
         dto.setName("");
         dto.setPrice(BigDecimal.valueOf(100));
+        dto.setDescription("Test Description");
+        dto.setCategory("Test Category");
+        dto.setQuantityInitial(10);
+        dto.setQuantityCurrent(5);
 
         var violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
-        assertEquals(1, violations.size());
-        assertEquals("El nombre del producto no puede estar vacío",
-                violations.iterator().next().getMessage());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name")));
     }
 
     @Test
     void testInvalidProductUpdateDto_NullName() {
         ProductDto dto = new ProductDto();
         dto.setName(null);
+        dto.setPrice(BigDecimal.valueOf(100));
+        dto.setDescription("Test Description");
+        dto.setCategory("Test Category");
+        dto.setQuantityInitial(10);
+        dto.setQuantityCurrent(5);
 
         var violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
-        assertEquals(1, violations.size());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name")));
     }
 
     @Test
-    void testProductUpdateDto_NullableFields() {
+    void testProductUpdateDto_RequiredFields() {
         ProductDto dto = new ProductDto();
         dto.setName("Test Product");
 
         var violations = validator.validate(dto);
-        assertTrue(violations.isEmpty());
+        assertFalse(violations.isEmpty(), "Debería tener violaciones para campos requeridos faltantes");
 
-        assertNull(dto.getPrice());
-        assertNull(dto.getDescription());
-        assertNull(dto.getCategory());
-        assertNull(dto.getQuantityInitial());
-        assertNull(dto.getQuantityCurrent());
+        assertTrue(violations.stream()
+                        .anyMatch(v -> v.getPropertyPath().toString().equals("description")),
+                "Description should be required");
+        assertTrue(violations.stream()
+                        .anyMatch(v -> v.getPropertyPath().toString().equals("category")),
+                "Category should be required");
+        assertTrue(violations.stream()
+                        .anyMatch(v -> v.getPropertyPath().toString().equals("price")),
+                "Price should be required");
+        assertTrue(violations.stream()
+                        .anyMatch(v -> v.getPropertyPath().toString().equals("quantityCurrent")),
+                "QuantityCurrent should be required");
     }
 
     @Test
