@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - develop
+      - frias
       - main
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
         run: ./gradlew clean build test
 
   deploy-test:
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/frias'
     needs: build-and-test
     runs-on: ubuntu-latest
     environment: test
