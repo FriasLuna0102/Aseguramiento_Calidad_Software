@@ -63,7 +63,7 @@ jobs:
       - name: Deploy on remote server
         run: |
           ssh -i ~/.ssh/id_rsa root@${{ secrets.SERVER_IP }} \
-            "systemctl restart myapp-test.service"
+            "systemctl restart inventario-test.service"
 
   deploy-prod:
     if: github.ref == 'refs/heads/main'
