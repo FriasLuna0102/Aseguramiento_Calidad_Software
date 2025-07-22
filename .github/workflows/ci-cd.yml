@@ -10,6 +10,10 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: Proyecto-Final/gestion_inventario
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -31,6 +35,10 @@ jobs:
     needs: build-and-test
     runs-on: ubuntu-latest
     environment: test
+
+    defaults:
+      run:
+        working-directory: Proyecto-Final/gestion_inventario
 
     steps:
       - name: Checkout code
@@ -62,6 +70,10 @@ jobs:
     needs: build-and-test
     runs-on: ubuntu-latest
     environment: production
+
+    defaults:
+      run:
+        working-directory: Proyecto-Final/gestion_inventario
 
     steps:
       - name: Checkout code
