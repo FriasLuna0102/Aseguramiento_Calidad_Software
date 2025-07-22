@@ -36,10 +36,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: test
 
-    defaults:
-      run:
-        working-directory: Proyecto-Final/gestion_inventario
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -51,19 +47,21 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
-      - name: Build JAR
-        run: ./gradlew bootJar
-
-      - name: Copy artifact to server
+      - name: Sync project to server
         run: |
-          rsync -avz -e "ssh -i ~/.ssh/id_rsa" \
-            build/libs/*.jar \
-            root@${{ secrets.SERVER_IP }}:/var/www/myapp/app.jar
+          rsync -az -e "ssh -i ~/.ssh/id_rsa" \
+            ./Proyecto-Final/gestion_inventario/ \
+            root@${{ secrets.SERVER_IP }}:/opt/inventario/
 
-      - name: Deploy on remote server
+      - name: Deploy via Docker Compose
         run: |
-          ssh -i ~/.ssh/id_rsa root@${{ secrets.SERVER_IP }} \
-            "systemctl restart inventario-test.service"
+          ssh -i ~/.ssh/id_rsa root@${{ secrets.SERVER_IP }} << 'EOF'
+            cd /opt/inventario
+            echo "SPRING_DATASOURCE_USERNAME=postgres" > .env
+            echo "SPRING_DATASOURCE_PASSWORD=postgres" >> .env
+            docker compose down
+            docker compose up -d --build
+          EOF
 
   deploy-prod:
     if: github.ref == 'refs/heads/main'
@@ -71,10 +69,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
 
-    defaults:
-      run:
-        working-directory: Proyecto-Final/gestion_inventario
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -86,16 +80,18 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
-      - name: Build JAR
-        run: ./gradlew bootJar
-
-      - name: Copy artifact to server
+      - name: Sync project to server
         run: |
-          rsync -avz -e "ssh -i ~/.ssh/id_rsa" \
-            build/libs/*.jar \
-            root@${{ secrets.SERVER_IP }}:/var/www/myapp/app.jar
+          rsync -az -e "ssh -i ~/.ssh/id_rsa" \
+            ./Proyecto-Final/gestion_inventario/ \
+            root@${{ secrets.SERVER_IP }}:/opt/inventario/
 
-      - name: Deploy on remote server
+      - name: Deploy via Docker Compose
         run: |
-          ssh -i ~/.ssh/id_rsa root@${{ secrets.SERVER_IP }} \
-            "systemctl restart myapp.service"
+          ssh -i ~/.ssh/id_rsa root@${{ secrets.SERVER_IP }} << 'EOF'
+            cd /opt/inventario
+            echo "SPRING_DATASOURCE_USERNAME=postgres" > .env
+            echo "SPRING_DATASOURCE_PASSWORD=postgres" >> .env
+            docker compose down
+            docker compose up -d --build
+          EOF
