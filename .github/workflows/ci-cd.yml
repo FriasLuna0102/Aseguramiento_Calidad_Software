@@ -50,8 +50,9 @@ jobs:
       - name: Sync project to server
         run: |
           rsync -az -e "ssh -i ~/.ssh/id_rsa" \
-            ./Proyecto-Final/gestion_inventario/ \
-            root@${{ secrets.SERVER_IP }}:/opt/inventario/
+            ./Proyecto-Final/ \
+            root@${{ secrets.SERVER_IP }}:/opt/
+
 
       - name: Deploy via Docker Compose
         run: |
@@ -83,8 +84,9 @@ jobs:
       - name: Sync project to server
         run: |
           rsync -az -e "ssh -i ~/.ssh/id_rsa" \
-            ./Proyecto-Final/gestion_inventario/ \
-            root@${{ secrets.SERVER_IP }}:/opt/inventario/
+            ./Proyecto-Final/ \
+            root@${{ secrets.SERVER_IP }}:/opt/
+
 
       - name: Deploy via Docker Compose
         run: |
