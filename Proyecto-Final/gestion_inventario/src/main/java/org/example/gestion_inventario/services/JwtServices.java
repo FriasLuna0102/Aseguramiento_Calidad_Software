@@ -1,7 +1,7 @@
 package org.example.gestion_inventario.services;
 
 import io.micrometer.core.annotation.Timed;
-import org.example.gestion_inventario.model.dto.JwtResponse;
+import org.example.gestion_inventario.model.entity.JwtResponse;
 import org.example.gestion_inventario.repository.JwtRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

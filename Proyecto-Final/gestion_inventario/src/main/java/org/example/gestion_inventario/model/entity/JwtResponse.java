@@ -1,4 +1,4 @@
-package org.example.gestion_inventario.model.dto;
+package org.example.gestion_inventario.model.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

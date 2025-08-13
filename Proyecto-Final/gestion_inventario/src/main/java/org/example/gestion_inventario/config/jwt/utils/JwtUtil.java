@@ -2,9 +2,8 @@ package org.example.gestion_inventario.config.jwt.utils;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import org.example.gestion_inventario.model.dto.JwtResponse;
+import org.example.gestion_inventario.model.entity.JwtResponse;
 import org.example.gestion_inventario.services.JwtServices;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;

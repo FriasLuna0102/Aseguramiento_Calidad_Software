@@ -36,8 +36,8 @@ class SecurityIntegrationTest {
     @Test
     void testUnauthorizedProductAccess() throws Exception {
         mockMvc.perform(get("/products"))
-                .andDo(result -> System.out.println("Status: " + result.getResponse().getStatus()))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string(""));
     }
 
 

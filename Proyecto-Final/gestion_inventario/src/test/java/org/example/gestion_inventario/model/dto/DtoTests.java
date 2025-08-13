@@ -1,7 +1,8 @@
 package org.example.gestion_inventario.model.dto;
 
+import org.example.gestion_inventario.model.entity.JwtResponse;
 import org.junit.jupiter.api.Test;
-import java.math.BigDecimal;
+
 import java.util.Date;
 import static org.junit.jupiter.api.Assertions.*;
 
