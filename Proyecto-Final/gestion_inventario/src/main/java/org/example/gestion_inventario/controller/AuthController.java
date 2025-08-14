@@ -1,5 +1,6 @@
 package org.example.gestion_inventario.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.gestion_inventario.model.entity.JwtResponse;
 import org.example.gestion_inventario.model.dto.LoginRequest;
 import org.example.gestion_inventario.config.jwt.utils.JwtUtil;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/auth")
+@Tag(name = "Auth Controller", description = "Endpoints for managing authentication")
 public class AuthController {
 
     @Autowired

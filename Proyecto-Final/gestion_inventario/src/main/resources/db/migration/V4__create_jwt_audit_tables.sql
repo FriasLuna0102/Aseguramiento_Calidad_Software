@@ -3,6 +3,7 @@ CREATE TABLE jwt_tokens_aud (
                                 rev INTEGER NOT NULL REFERENCES revinfo(rev),
                                 revtype SMALLINT,
                                 type VARCHAR(10),
+                                roles VARCHAR(500),
                                 username VARCHAR(50),
                                 valid BOOLEAN,
                                 expiration_date TIMESTAMP,
