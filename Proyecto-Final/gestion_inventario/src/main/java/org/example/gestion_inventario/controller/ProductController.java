@@ -71,6 +71,7 @@ public class ProductController {
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PostMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_EMPLOYEE')")
     public ResponseEntity<ProductResponse> create(@Valid @RequestBody ProductDto dto) {
         ProductResponse saved = productService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
@@ -85,6 +86,7 @@ public class ProductController {
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_EMPLOYEE')")
     public ResponseEntity<ProductResponse> update(@PathVariable Long id, @Valid @RequestBody ProductDto dto) {
         ProductResponse updated = productService.update(id, dto);
         return ResponseEntity.ok(updated);
