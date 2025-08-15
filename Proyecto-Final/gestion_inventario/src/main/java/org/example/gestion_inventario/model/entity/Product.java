@@ -53,13 +53,20 @@ public class Product {
     @Max(value = 999999, message = "Current quantity must be less than 1000000")
     private int quantityCurrent;
 
-    public Product(String name, String description, String category, BigDecimal price, int quantityInitial, int quantityCurrent) {
+    @Column(nullable = false)
+    @NotNull(message = "Stock Minimal quantity cannot be null")
+    @Min(value = 0, message = "Stock Minimal quantity must be greater than or equal to 0")
+    @Max(value = 999999, message = "Stock Minimal quantity must be less than 1000000")
+    private int stockMinimalQuantity;
+
+    public Product(String name, String description, String category, BigDecimal price, int quantityInitial, int quantityCurrent, int stockMinimalQuantity) {
         this.name = name;
         this.description = description;
         this.category = category;
         this.price = price;
         this.quantityInitial = quantityInitial;
         this.quantityCurrent = quantityCurrent;
+        this.stockMinimalQuantity = stockMinimalQuantity;
     }
 
     public Product() {

@@ -127,4 +127,9 @@ public class ProductController {
                 .add(AuditEntity.id().eq(id))
                 .getResultList();
     }
+
+    @GetMapping("/{id}/stockMinimalQuantity")
+    public int getStockMinimalQuantity(@PathVariable Long id) {
+        return productService.getStockMinimalQuantity(id);
+    }
 }
