@@ -1,5 +1,6 @@
 package org.example.gestion_inventario.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.gestion_inventario.model.entity.JwtResponse;
 import org.example.gestion_inventario.model.dto.LoginRequest;
 import org.example.gestion_inventario.config.jwt.utils.JwtUtil;
@@ -10,13 +11,16 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/auth")
+@Tag(name = "Auth Controller", description = "Endpoints for managing authentication")
 public class AuthController {
 
     @Autowired
@@ -41,7 +45,7 @@ public class AuthController {
             String jwt = jwtUtil.generateToken(authentication);
             Date expirationDate = jwtUtil.getExpirationDateFromJwtToken(jwt);
 
-            JwtResponse jwtResponse = new JwtResponse(jwt, loginRequest.getUsername(), expirationDate);
+            JwtResponse jwtResponse = new JwtResponse(jwt, loginRequest.getUsername(), expirationDate, authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
             return ResponseEntity.ok(jwtResponse);
         } catch (AuthenticationException e) {
             return ResponseEntity.badRequest()

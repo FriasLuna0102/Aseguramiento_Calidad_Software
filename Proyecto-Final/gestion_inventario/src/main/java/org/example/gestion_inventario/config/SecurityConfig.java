@@ -85,7 +85,12 @@ public class SecurityConfig {
                 .roles("EMPLOYEE")
                 .build();
 
-        return new InMemoryUserDetailsManager(admin, user);
+        UserDetails guest = User.withUsername("guest")
+                .password(encoder.encode("guest123"))
+                .roles("GUEST")
+                .build();
+
+        return new InMemoryUserDetailsManager(admin, user, guest);
     }
     @Bean
     public AuthenticationProvider authenticationProvider() {

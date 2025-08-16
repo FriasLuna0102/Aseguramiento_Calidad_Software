@@ -13,14 +13,14 @@ import org.example.gestion_inventario.services.ProductService;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.query.AuditEntity;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -71,6 +71,7 @@ public class ProductController {
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PostMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_EMPLOYEE')")
     public ResponseEntity<ProductResponse> create(@Valid @RequestBody ProductDto dto) {
         ProductResponse saved = productService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
@@ -85,6 +86,7 @@ public class ProductController {
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_EMPLOYEE')")
     public ResponseEntity<ProductResponse> update(@PathVariable Long id, @Valid @RequestBody ProductDto dto) {
         ProductResponse updated = productService.update(id, dto);
         return ResponseEntity.ok(updated);
@@ -111,6 +113,7 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "Product not found")
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         productService.delete(id);
         return ResponseEntity.noContent().build();
@@ -123,5 +126,10 @@ public class ProductController {
                 .forRevisionsOfEntity(Product.class, false, true)
                 .add(AuditEntity.id().eq(id))
                 .getResultList();
+    }
+
+    @GetMapping("/{id}/stockMinimalQuantity")
+    public int getStockMinimalQuantity(@PathVariable Long id) {
+        return productService.getStockMinimalQuantity(id);
     }
 }
