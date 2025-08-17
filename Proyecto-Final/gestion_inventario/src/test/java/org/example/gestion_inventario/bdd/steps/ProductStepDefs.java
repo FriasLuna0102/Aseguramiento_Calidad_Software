@@ -55,6 +55,7 @@ public class ProductStepDefs {
             productDto.setPrice(new BigDecimal(values.get(2)));
             productDto.setQuantityInitial(Integer.parseInt(values.get(3)));
             productDto.setQuantityCurrent(Integer.parseInt(values.get(4)));
+            productDto.setStockMinimalQuantity(Integer.parseInt(values.get(5)));
 
             System.out.println("Created DTO: " +
                     "name=" + productDto.getName() +
@@ -62,7 +63,8 @@ public class ProductStepDefs {
                     ", category=" + productDto.getCategory() +
                     ", price=" + productDto.getPrice() +
                     ", quantityInitial=" + productDto.getQuantityInitial() +
-                    ", quantityCurrent=" + productDto.getQuantityCurrent());
+                    ", quantityCurrent=" + productDto.getQuantityCurrent() +
+                    ", stockMinimalQuantity=" + productDto.getStockMinimalQuantity());
 
             testProduct = productService.create(productDto);
 
@@ -91,6 +93,7 @@ public class ProductStepDefs {
         assertEquals(0, productDto.getPrice().compareTo(testProduct.getPrice()), "Price mismatch");
         assertEquals(productDto.getQuantityInitial(), testProduct.getQuantityInitial(), "Initial quantity mismatch");
         assertEquals(productDto.getQuantityCurrent(), testProduct.getQuantityCurrent(), "Current quantity mismatch");
+        assertEquals(productDto.getStockMinimalQuantity(), testProduct.getStockMinimalQuantity(), "Stock minimal quantity mismatch");
     }
 
     @Given("there is an existing product")
@@ -102,6 +105,7 @@ public class ProductStepDefs {
         productDto.setPrice(new BigDecimal("99.99"));
         productDto.setQuantityInitial(10);
         productDto.setQuantityCurrent(10);
+        productDto.setStockMinimalQuantity(5);
 
         testProduct = productService.create(productDto);
     }
@@ -125,6 +129,7 @@ public class ProductStepDefs {
         assertEquals(productDto.getPrice(), testProduct.getPrice());
         assertEquals(productDto.getQuantityInitial(), testProduct.getQuantityInitial());
         assertEquals(productDto.getQuantityCurrent(), testProduct.getQuantityCurrent());
+        assertEquals(productDto.getStockMinimalQuantity(), testProduct.getStockMinimalQuantity());
     }
 
     @When("I delete the product")
@@ -161,6 +166,7 @@ public class ProductStepDefs {
             updateDto.setPrice(new BigDecimal(values.get(2)));
             updateDto.setQuantityInitial(Integer.parseInt(values.get(3)));
             updateDto.setQuantityCurrent(Integer.parseInt(values.get(4)));
+            updateDto.setStockMinimalQuantity(Integer.parseInt(values.get(5)));
 
             testProduct = productService.update(testProduct.getId(), updateDto);
             productDto = updateDto;

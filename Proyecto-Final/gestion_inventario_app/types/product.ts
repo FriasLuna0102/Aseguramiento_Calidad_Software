@@ -6,6 +6,7 @@ export interface Product {
   price: number
   quantityCurrent: number
   quantityInitial: number
+  stockMinimalQuantity: number
   createdAt?: string
   updatedAt?: string
 }
@@ -26,6 +27,7 @@ export interface ProductFormData {
   category: string
   price: string
   quantity: string
+  stockMinimalQuantity: string
 }
 
 export const CATEGORIES = [

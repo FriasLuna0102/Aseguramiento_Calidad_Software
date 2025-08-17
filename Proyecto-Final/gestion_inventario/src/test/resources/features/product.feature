@@ -3,8 +3,8 @@ Feature: Product Management
   Scenario: Create a new product
     Given I want to create a new product
     When I provide the following product details:
-      | name         | description      | category | price | quantityInitial | quantityCurrent |
-      | Test Product | Test Description | Test     | 99.99 | 10             | 10             |
+      | name         | description      | category | price | quantityInitial | quantityCurrent | stockMinimalQuantity |
+      | Test Product | Test Description | Test     | 99.99 | 10             | 10             | 5               |
     Then the product should be created successfully
 
   Scenario: Get product by ID
@@ -20,6 +20,6 @@ Feature: Product Management
   Scenario: Update a product
     Given there is an existing product
     When I update the product with new details:
-      | name           | description          | category    | price | quantityInitial | quantityCurrent |
-      | Updated Product| Updated Description  | Updated Cat | 149.99| 20             | 15             |
+      | name           | description          | category    | price | quantityInitial | quantityCurrent | stockMinimalQuantity |
+      | Updated Product| Updated Description  | Updated Cat | 149.99| 20             | 15             | 30               |
     Then the product should be updated successfully

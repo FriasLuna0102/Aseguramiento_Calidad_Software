@@ -20,5 +20,6 @@ CREATE TABLE products_aud (
                               price NUMERIC(12,2),
                               quantity_initial INT,
                               quantity_current INT,
+                              stock_minimal_quantity INT,
                               PRIMARY KEY (id, rev)
 );
