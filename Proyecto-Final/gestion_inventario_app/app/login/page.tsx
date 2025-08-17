@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Package, Eye, EyeOff } from "lucide-react"
 
+const BASE_URL = process.env.BASE_URL || 'http://localhost:8080'
+
 export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -37,7 +39,7 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch("http://localhost:8080/api/v1/auth/login", {
+      const response = await fetch(`${BASE_URL}/api/v1/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

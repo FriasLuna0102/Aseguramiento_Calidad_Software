@@ -8,6 +8,8 @@ import type { Product } from "@/types/product"
 import { AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+const BASE_URL = process.env.BASE_URL || 'http://localhost:8080'
+
 export default function EditProductPage() {
   const params = useParams()
   const router = useRouter()
@@ -42,7 +44,7 @@ export default function EditProductPage() {
       try {
         console.log("Obteniendo producto con ID:", productId)
 
-        const response = await fetch(`http://localhost:8080/api/v1/products/${productId}`, {
+        const response = await fetch(`${BASE_URL}/api/v1/products/${productId}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

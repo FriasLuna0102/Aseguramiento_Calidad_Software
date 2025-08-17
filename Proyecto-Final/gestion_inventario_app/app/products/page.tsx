@@ -18,6 +18,8 @@ import { Search, Plus, Edit, Trash2, Package, TrendingUp, AlertTriangle, Filter 
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useDebounce } from "@/hooks/useDebounce"
 
+const BASE_URL = process.env.BASE_URL || 'http://localhost:8080'
+
 export default function ProductsPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -119,7 +121,7 @@ export default function ProductsPage() {
 
         const token = localStorage.getItem("token");
         const response = await fetch(
-            `http://localhost:8080/api/v1/products?${params.toString()}`,
+            `${BASE_URL}/api/v1/products?${params.toString()}`,
             {
               method: "GET",
               headers: {

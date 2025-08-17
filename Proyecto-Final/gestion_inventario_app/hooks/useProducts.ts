@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import type { Product, PaginatedProducts } from "@/types/product"
 
+const BASE_URL = process.env.BASE_URL || 'http://localhost:8080'
+
 export function useProducts() {
   const [products, setProducts] = useState<PaginatedProducts>({
     content: [],
@@ -46,7 +48,7 @@ export function useProducts() {
 
       const token = localStorage.getItem("token")
       const response = await fetch(
-          `http://localhost:8080/api/v1/products?${params.toString()}`,
+          `${BASE_URL}/api/v1/products?${params.toString()}`,
           {
             method: "GET",
             headers: {
@@ -87,7 +89,7 @@ export function useProducts() {
 
       console.log("Enviando producto:", productData)
 
-      const response = await fetch("http://localhost:8080/api/v1/products", {
+      const response = await fetch(`${BASE_URL}/api/v1/products`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -124,7 +126,7 @@ export function useProducts() {
 
       console.log("Actualizando producto:", id, productData)
 
-      const response = await fetch(`http://localhost:8080/api/v1/products/${id}`, {
+      const response = await fetch(`${BASE_URL}/api/v1/products/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -157,7 +159,7 @@ export function useProducts() {
   const deleteProduct = async (id: string) => {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null
-      const response = await fetch(`http://localhost:8080/api/v1/products/${id}`, {
+      const response = await fetch(`${BASE_URL}/api/v1/products/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
