@@ -26,6 +26,7 @@ class ProductDtoTest {
         dto.setCategory("Test Category");
         dto.setQuantityInitial(10);
         dto.setQuantityCurrent(5);
+        dto.setStockMinimalQuantity(2);
 
         var violations = validator.validate(dto);
         assertTrue(violations.isEmpty());
@@ -36,6 +37,7 @@ class ProductDtoTest {
         assertEquals("Test Category", dto.getCategory());
         assertEquals(10, dto.getQuantityInitial());
         assertEquals(5, dto.getQuantityCurrent());
+        assertEquals(2, dto.getStockMinimalQuantity());
     }
 
     @Test
@@ -47,6 +49,7 @@ class ProductDtoTest {
         dto.setCategory("Test Category");
         dto.setQuantityInitial(10);
         dto.setQuantityCurrent(5);
+        dto.setStockMinimalQuantity(2);
 
         var violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
@@ -63,6 +66,7 @@ class ProductDtoTest {
         dto.setCategory("Test Category");
         dto.setQuantityInitial(10);
         dto.setQuantityCurrent(5);
+        dto.setStockMinimalQuantity(2);
 
         var violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
@@ -90,6 +94,9 @@ class ProductDtoTest {
         assertTrue(violations.stream()
                         .anyMatch(v -> v.getPropertyPath().toString().equals("quantityCurrent")),
                 "QuantityCurrent should be required");
+        assertTrue(violations.stream()
+                        .anyMatch(v -> v.getPropertyPath().toString().equals("stockMinimalQuantity")),
+                "StockMinimalQuantity should be required");
     }
 
     @Test
@@ -102,6 +109,7 @@ class ProductDtoTest {
         dto.setCategory("New Category");
         dto.setQuantityInitial(20);
         dto.setQuantityCurrent(15);
+        dto.setStockMinimalQuantity(5);
 
         assertEquals("New Product", dto.getName());
         assertEquals(BigDecimal.valueOf(200), dto.getPrice());
@@ -109,5 +117,6 @@ class ProductDtoTest {
         assertEquals("New Category", dto.getCategory());
         assertEquals(20, dto.getQuantityInitial());
         assertEquals(15, dto.getQuantityCurrent());
+        assertEquals(5, dto.getStockMinimalQuantity());
     }
 }

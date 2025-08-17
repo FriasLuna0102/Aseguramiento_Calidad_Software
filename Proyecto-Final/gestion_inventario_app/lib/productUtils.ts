@@ -17,11 +17,14 @@ export function createProductForAPI(productData: {
   category: string
   price: number
   quantity: number
+  stockMinimalQuantity: number
 }) {
   return {
     ...productData,
     quantityCurrent: productData.quantity,
     quantityInitial: productData.quantity,
+    stockMinimalQuantity: productData.stockMinimalQuantity,
+    
   }
 }
 
@@ -32,6 +35,7 @@ export function updateProductForAPI(productData: {
   category?: string
   price?: number
   quantity?: number
+  stockMinimalQuantity?: number
 }) {
   const result: any = { ...productData }
   
