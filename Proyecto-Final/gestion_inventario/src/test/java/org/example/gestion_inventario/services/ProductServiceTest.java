@@ -50,6 +50,7 @@ class ProductServiceTest {
         testProductDto.setPrice(BigDecimal.valueOf(100.00));
         testProductDto.setQuantityInitial(10);
         testProductDto.setQuantityCurrent(5);
+        testProductDto.setStockMinimalQuantity(25);
 
         testProduct = new Product();
         testProduct.setId(1L);
@@ -59,6 +60,7 @@ class ProductServiceTest {
         testProduct.setPrice(testProductDto.getPrice());
         testProduct.setQuantityInitial(testProductDto.getQuantityInitial());
         testProduct.setQuantityCurrent(testProductDto.getQuantityCurrent());
+        testProduct.setStockMinimalQuantity(testProductDto.getStockMinimalQuantity());
 
         testProductResponse = ProductResponse.builder()
                 .id(testProduct.getId())
@@ -68,6 +70,7 @@ class ProductServiceTest {
                 .price(testProduct.getPrice())
                 .quantityInitial(testProduct.getQuantityInitial())
                 .quantityCurrent(testProduct.getQuantityCurrent())
+                .stockMinimalQuantity(testProduct.getStockMinimalQuantity())
                 .build();
     }
 
