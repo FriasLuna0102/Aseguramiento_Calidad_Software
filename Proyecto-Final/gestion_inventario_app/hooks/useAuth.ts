@@ -79,24 +79,27 @@ export function useAuth() {
 
   const getUserRole = (): string | null => {
     const user = getUser()
-    console.log("Usuario obtenido:", user) // Debug log
-    const role = user?.role || null
-    console.log("Rol extraído:", role) // Debug log
-    return role
+    return user?.role || null
   }
 
   const hasRole = (role: string): boolean => {
     const userRole = getUserRole()
-    const result = userRole === role
-    console.log(`¿Usuario tiene rol '${role}'?`, result) // Debug log
-    return result
+    return userRole === role
   }
 
   const canDelete = (): boolean => {
-    // Solo los usuarios que NO son ROLE_EMPLOYEE pueden eliminar
-    const result = !hasRole('ROLE_EMPLOYEE')
-    console.log("¿Puede eliminar?", result) // Debug log
-    return result
+    // Solo los usuarios que NO son ROLE_EMPLOYEE ni ROLE_GUEST pueden eliminar
+    return !hasRole('ROLE_EMPLOYEE') && !hasRole('ROLE_GUEST')
+  }
+
+  const canCreate = (): boolean => {
+    // Los usuarios ROLE_GUEST no pueden crear productos
+    return !hasRole('ROLE_GUEST')
+  }
+
+  const canEdit = (): boolean => {
+    // Los usuarios ROLE_GUEST no pueden editar productos
+    return !hasRole('ROLE_GUEST')
   }
 
   return {
@@ -106,5 +109,7 @@ export function useAuth() {
     getUserRole,
     hasRole,
     canDelete,
+    canCreate,
+    canEdit,
   }
 }

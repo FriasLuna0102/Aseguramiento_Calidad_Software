@@ -24,13 +24,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:8080'
 export default function ProductsPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const { canDelete } = useAuth()
-  
-  // Debug log para verificar permisos
-  console.log("=== DEBUG PERMISOS ===")
-  console.log("canDelete():", canDelete())
-  console.log("====================")
-  
+  const { canDelete, canCreate, canEdit } = useAuth()
   const {
     products,
     loading,
@@ -665,13 +659,15 @@ export default function ProductsPage() {
             <CardHeader className="bg-white border-b border-gray-200">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
                 <CardTitle className="text-2xl font-bold text-[#003B73]">Gestión de Productos</CardTitle>
-                <Button
-                    onClick={() => router.push("/products/add")}
-                    className="bg-[#007BFF] text-white hover:bg-[#003B73] focus:ring-[#007BFF] transition-all duration-200"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Agregar Producto
-                </Button>
+                {canCreate() && (
+                  <Button
+                      onClick={() => router.push("/products/add")}
+                      className="bg-[#007BFF] text-white hover:bg-[#003B73] focus:ring-[#007BFF] transition-all duration-200"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Agregar Producto
+                  </Button>
+                )}
               </div>
             </CardHeader>
 
@@ -767,7 +763,7 @@ export default function ProductsPage() {
                           ? "Comienza agregando tu primer producto al inventario."
                           : "Intenta ajustar los filtros de búsqueda."}
                     </p>
-                    {displayedProducts.totalElements === 0 && (
+                    {displayedProducts.totalElements === 0 && canCreate() && (
                         <Button
                             onClick={() => router.push("/products/add")}
                             className="bg-[#007BFF] text-white hover:bg-[#003B73]"
@@ -789,7 +785,9 @@ export default function ProductsPage() {
                             <TableHead className="font-semibold text-[#003B73]">Precio</TableHead>
                             <TableHead className="font-semibold text-[#003B73]">Cantidad</TableHead>
                             <TableHead className="font-semibold text-[#003B73]">Estado</TableHead>
-                            <TableHead className="font-semibold text-[#003B73] text-center">Acciones</TableHead>
+                            {(canEdit() || canDelete()) && (
+                              <TableHead className="font-semibold text-[#003B73] text-center">Acciones</TableHead>
+                            )}
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -807,28 +805,32 @@ export default function ProductsPage() {
                                 </TableCell>
                                 <TableCell className="font-medium">{getCurrentQuantity(product)}</TableCell>
                                 <TableCell>{getStockBadge(product)}</TableCell>
-                                <TableCell>
-                                  <div className="flex items-center justify-center space-x-2">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => router.push(`/products/edit/${product.id}`)}
-                                        className="text-[#007BFF] hover:text-[#003B73] hover:bg-[#E0F0FF]"
-                                    >
-                                      <Edit className="w-4 h-4"/>
-                                    </Button>
-                                    {canDelete() && (
-                                      <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => handleDeleteClick(product)}
-                                          className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                                      >
-                                        <Trash2 className="w-4 h-4"/>
-                                      </Button>
-                                    )}
-                                  </div>
-                                </TableCell>
+                                {(canEdit() || canDelete()) && (
+                                  <TableCell>
+                                    <div className="flex items-center justify-center space-x-2">
+                                      {canEdit() && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => router.push(`/products/edit/${product.id}`)}
+                                            className="text-[#007BFF] hover:text-[#003B73] hover:bg-[#E0F0FF]"
+                                        >
+                                          <Edit className="w-4 h-4"/>
+                                        </Button>
+                                      )}
+                                      {canDelete() && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleDeleteClick(product)}
+                                            className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                                        >
+                                          <Trash2 className="w-4 h-4"/>
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                )}
                               </TableRow>
                           ))}
                         </TableBody>

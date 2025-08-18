@@ -52,7 +52,6 @@ export default function LoginPage() {
 
       if (response.ok) {
         const data = await response.json()
-        console.log("Respuesta completa del login:", data) // Debug log
         
         const token = data.token || data.accessToken || data.jwt
         if (token) {
@@ -67,7 +66,6 @@ export default function LoginPage() {
             ...data.user // Incluir cualquier otra información del usuario si existe
           }
           
-          console.log("Información del usuario que se guardará:", userInfo) // Debug log
           localStorage.setItem("user", JSON.stringify(userInfo))
           
           const userName = userInfo.name || userInfo.username

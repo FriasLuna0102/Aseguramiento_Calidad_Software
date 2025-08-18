@@ -4,15 +4,17 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { ProductForm } from "@/components/product-form"
+import { useAuth } from "@/hooks/useAuth"
 import type { Product } from "@/types/product"
 import { AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:8080'
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:8080'
 
 export default function EditProductPage() {
   const params = useParams()
   const router = useRouter()
+  const { canEdit } = useAuth()
   const productId = params.id as string
 
   const [mounted, setMounted] = useState(false)
@@ -28,6 +30,12 @@ export default function EditProductPage() {
       const token = localStorage.getItem("token")
       if (!token) {
         router.push("/login")
+        return
+      }
+
+      // Verificar si el usuario puede editar productos
+      if (!canEdit()) {
+        router.push("/products") // Redirigir si no tiene permisos
         return
       }
 
