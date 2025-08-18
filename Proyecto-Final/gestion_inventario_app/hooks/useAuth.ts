@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:8080'
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:8080'
 
 export function useAuth() {
   const router = useRouter()
@@ -77,9 +77,34 @@ export function useAuth() {
     }
   }
 
+  const getUserRole = (): string | null => {
+    const user = getUser()
+    console.log("Usuario obtenido:", user) // Debug log
+    const role = user?.role || null
+    console.log("Rol extraído:", role) // Debug log
+    return role
+  }
+
+  const hasRole = (role: string): boolean => {
+    const userRole = getUserRole()
+    const result = userRole === role
+    console.log(`¿Usuario tiene rol '${role}'?`, result) // Debug log
+    return result
+  }
+
+  const canDelete = (): boolean => {
+    // Solo los usuarios que NO son ROLE_EMPLOYEE pueden eliminar
+    const result = !hasRole('ROLE_EMPLOYEE')
+    console.log("¿Puede eliminar?", result) // Debug log
+    return result
+  }
+
   return {
     logout,
     isAuthenticated,
     getUser,
+    getUserRole,
+    hasRole,
+    canDelete,
   }
 }

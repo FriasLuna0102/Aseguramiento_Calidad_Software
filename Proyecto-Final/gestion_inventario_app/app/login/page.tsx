@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Package, Eye, EyeOff } from "lucide-react"
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:8080'
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:8080'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -52,21 +52,25 @@ export default function LoginPage() {
 
       if (response.ok) {
         const data = await response.json()
+        console.log("Respuesta completa del login:", data) // Debug log
+        
         const token = data.token || data.accessToken || data.jwt
         if (token) {
           localStorage.setItem("token", token)
           
-          // Guardar información del usuario
-          if (data.user) {
-            localStorage.setItem("user", JSON.stringify(data.user))
-          } else if (data.username || data.name) {
-            localStorage.setItem("user", JSON.stringify({
-              username: data.username || formData.username,
-              name: data.name || data.username || formData.username
-            }))
+          // Guardar información completa del usuario, incluyendo el rol desde rolesString
+          const userInfo = {
+            username: data.username || formData.username,
+            name: data.name || data.username || formData.username,
+            role: data.rolesString || null, // Extraer el rol desde rolesString
+            email: data.email || null,
+            ...data.user // Incluir cualquier otra información del usuario si existe
           }
           
-          const userName = data.user?.name || data.name || data.username || formData.username
+          console.log("Información del usuario que se guardará:", userInfo) // Debug log
+          localStorage.setItem("user", JSON.stringify(userInfo))
+          
+          const userName = userInfo.name || userInfo.username
           
           toast({
             title: "Inicio de sesión exitoso",

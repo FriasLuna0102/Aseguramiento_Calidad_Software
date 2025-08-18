@@ -12,17 +12,25 @@ import { useToast } from "@/hooks/use-toast"
 import { Header } from "@/components/header"
 import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal"
 import { useProducts } from "@/hooks/useProducts"
+import { useAuth } from "@/hooks/useAuth"
 import { type Product, CATEGORIES, PaginatedProducts } from "@/types/product"
 import { getCurrentQuantity, getStockStatus, getPriceRange } from "@/lib/productUtils"
 import { Search, Plus, Edit, Trash2, Package, TrendingUp, AlertTriangle, Filter } from "lucide-react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useDebounce } from "@/hooks/useDebounce"
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:8080'
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:8080'
 
 export default function ProductsPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { canDelete } = useAuth()
+  
+  // Debug log para verificar permisos
+  console.log("=== DEBUG PERMISOS ===")
+  console.log("canDelete():", canDelete())
+  console.log("====================")
+  
   const {
     products,
     loading,
@@ -809,14 +817,16 @@ export default function ProductsPage() {
                                     >
                                       <Edit className="w-4 h-4"/>
                                     </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleDeleteClick(product)}
-                                        className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                                    >
-                                      <Trash2 className="w-4 h-4"/>
-                                    </Button>
+                                    {canDelete() && (
+                                      <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleDeleteClick(product)}
+                                          className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                                      >
+                                        <Trash2 className="w-4 h-4"/>
+                                      </Button>
+                                    )}
                                   </div>
                                 </TableCell>
                               </TableRow>
