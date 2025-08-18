@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 
+const BASE_URL = process.env.BASE_URL || 'http://localhost:8080'
+
 export function useAuth() {
   const router = useRouter()
   const { toast } = useToast()
@@ -13,7 +15,7 @@ export function useAuth() {
       
       if (token) {
         // Llamar al endpoint de logout para invalidar el token en el servidor
-        const response = await fetch("http://localhost:8080/api/v1/auth/logout", {
+        const response = await fetch(`${BASE_URL}/api/v1/auth/logout`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

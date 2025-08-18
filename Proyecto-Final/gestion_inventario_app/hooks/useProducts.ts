@@ -107,11 +107,11 @@ export function useProducts() {
       const newProduct: Product = await response.json()
       console.log("Producto creado:", newProduct)
 
-      setProducts(prev => ({
-        ...prev,
-        content: [...prev.content, newProduct],
-        totalElements: prev.totalElements + 1
-      }))
+      // Refrescar los productos desde el servidor para mantener consistencia
+      await fetchProducts(currentPage, pageSize)
+
+      // Emitir evento personalizado para refrescar estadísticas globales
+      window.dispatchEvent(new CustomEvent('refreshGlobalStats'))
 
       return newProduct
     } catch (err) {
@@ -144,10 +144,11 @@ export function useProducts() {
       const updatedProduct: Product = await response.json()
       console.log("Producto actualizado:", updatedProduct)
 
-      setProducts(prev => ({
-        ...prev,
-        content: prev.content.map(p => p.id === id ? updatedProduct : p)
-      }))
+      // Refrescar los productos desde el servidor para mantener consistencia
+      await fetchProducts(currentPage, pageSize)
+
+      // Emitir evento personalizado para refrescar estadísticas globales
+      window.dispatchEvent(new CustomEvent('refreshGlobalStats'))
 
       return updatedProduct
     } catch (err) {
@@ -171,11 +172,11 @@ export function useProducts() {
         throw new Error(`Error al eliminar producto: ${response.status}`)
       }
 
-      setProducts(prev => ({
-        ...prev,
-        content: prev.content.filter(p => p.id !== id),
-        totalElements: prev.totalElements - 1
-      }))
+      // Refrescar los productos desde el servidor para mantener consistencia
+      await fetchProducts(currentPage, pageSize)
+
+      // Emitir evento personalizado para refrescar estadísticas globales
+      window.dispatchEvent(new CustomEvent('refreshGlobalStats'))
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : "Error desconocido")
     }
@@ -183,6 +184,10 @@ export function useProducts() {
 
   const getProductById = (id: string): Product | undefined => {
     return products.content.find(product => product.id === id)
+  }
+
+  const refreshProducts = async () => {
+    await fetchProducts(currentPage, pageSize)
   }
 
   useEffect(() => {
@@ -208,5 +213,6 @@ export function useProducts() {
     updateProduct,
     deleteProduct,
     getProductById,
+    refreshProducts,
   }
 }

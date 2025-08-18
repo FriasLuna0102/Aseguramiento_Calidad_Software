@@ -13,7 +13,7 @@ import { Header } from "@/components/header"
 import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal"
 import { useProducts } from "@/hooks/useProducts"
 import { type Product, CATEGORIES, PaginatedProducts } from "@/types/product"
-import { getCurrentQuantity } from "@/lib/productUtils"
+import { getCurrentQuantity, getStockStatus, getPriceRange } from "@/lib/productUtils"
 import { Search, Plus, Edit, Trash2, Package, TrendingUp, AlertTriangle, Filter } from "lucide-react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useDebounce } from "@/hooks/useDebounce"
@@ -29,14 +29,19 @@ export default function ProductsPage() {
     error,
     deleteProduct,
     fetchProducts,
+    refreshProducts,
     currentPage,
-    pageSize
+    pageSize,
+    setCurrentPage,
+    setPageSize
   } = useProducts()
 
   const [mounted, setMounted] = useState(false)
   const [userName, setUserName] = useState("Usuario")
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
+  const [stockFilter, setStockFilter] = useState("all")
+  const [priceFilter, setPriceFilter] = useState("all")
   const [isSearching, setIsSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<PaginatedProducts>({
     content: [],
@@ -52,9 +57,88 @@ export default function ProductsPage() {
     product: Product | null
   }>({ isOpen: false, product: null })
   const [isDeleting, setIsDeleting] = useState(false)
+  const [globalStats, setGlobalStats] = useState({
+    totalProducts: 0,
+    totalValue: 0,
+    lowStockProducts: 0
+  })
+  // Estado para todos los productos (cuando se necesiten filtros locales)
+  const [allProducts, setAllProducts] = useState<PaginatedProducts>({
+    content: [],
+    totalPages: 0,
+    totalElements: 0,
+    size: 10,
+    number: 0,
+    last: true,
+    first: true
+  })
 
-  const debouncedSearchTerm = useDebounce(searchTerm, 300)
-  const debouncedCategory = useDebounce(categoryFilter, 300)
+  const debouncedSearchTerm = useDebounce(searchTerm, 150) // Reducido de 300ms a 150ms
+  const debouncedCategory = useDebounce(categoryFilter, 100) // Reducido de 300ms a 100ms (instantáneo casi)
+  const debouncedStock = useDebounce(stockFilter, 100) // Reducido de 300ms a 100ms (filtro local, rápido)
+  const debouncedPrice = useDebounce(priceFilter, 100) // Reducido de 300ms a 100ms (filtro local, rápido)
+
+  // Función para obtener estadísticas globales
+  const fetchGlobalStats = async () => {
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`${BASE_URL}/api/v1/products/stats`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      })
+
+      if (response.ok) {
+        const stats = await response.json()
+        setGlobalStats(stats)
+      } else {
+        // Si no existe el endpoint de stats, calcular manualmente
+        await fetchAllProductsForStats()
+      }
+    } catch (error) {
+      console.error("Error fetching global stats:", error)
+      // Fallback: calcular estadísticas manualmente
+      await fetchAllProductsForStats()
+    }
+  }
+
+  // Función de respaldo para calcular estadísticas manualmente
+  const fetchAllProductsForStats = async () => {
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`${BASE_URL}/api/v1/products?size=9999`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const allProducts = data.content
+
+        const totalValue = allProducts.reduce((sum: number, product: Product) => {
+          return sum + (product.price * getCurrentQuantity(product))
+        }, 0)
+
+        const lowStockProducts = allProducts.filter((product: Product) => {
+          const stockStatus = getStockStatus(product)
+          return stockStatus === 'low'
+        }).length
+
+        setGlobalStats({
+          totalProducts: data.totalElements,
+          totalValue,
+          lowStockProducts
+        })
+      }
+    } catch (error) {
+      console.error("Error calculating global stats:", error)
+    }
+  }
 
   // Evitar problemas de hidratación
   useEffect(() => {
@@ -97,7 +181,68 @@ export default function ProductsPage() {
     }
   }, [])
 
-  // Efecto para la búsqueda
+  // Efecto para refrescar productos cuando la página se vuelve visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && mounted) {
+        refreshProducts()
+        fetchGlobalStats() // También refrescar estadísticas globales
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+    
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+    }
+  }, [mounted, refreshProducts])
+
+  // Efecto para refrescar productos cuando se navega de vuelta
+  useEffect(() => {
+    if (mounted) {
+      refreshProducts()
+      fetchGlobalStats() // Cargar estadísticas globales
+    }
+  }, [mounted])
+
+  // Efecto para escuchar eventos de actualización de estadísticas globales
+  useEffect(() => {
+    const handleRefreshStats = () => {
+      fetchGlobalStats()
+    }
+
+    window.addEventListener('refreshGlobalStats', handleRefreshStats)
+    
+    return () => {
+      window.removeEventListener('refreshGlobalStats', handleRefreshStats)
+    }
+  }, [])
+
+  // Función para obtener todos los productos cuando se necesiten filtros locales
+  const fetchAllProductsForFiltering = async () => {
+    try {
+      const token = localStorage.getItem("token")
+      // Obtener un número razonable de productos para filtrar (ajustable según necesidad)
+      const response = await fetch(`${BASE_URL}/api/v1/products?size=1500&page=0`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setAllProducts(data)
+        return data
+      }
+    } catch (error) {
+      console.error("Error fetching all products for filtering:", error)
+    }
+    return null
+  }
+
+  // Efecto para la búsqueda y filtros
   useEffect(() => {
     let isActive = true;
 
@@ -108,7 +253,8 @@ export default function ProductsPage() {
       try {
         const params = new URLSearchParams({
           page: "0",
-          size: pageSize.toString(),
+          // Si hay filtros de stock o precio, necesitamos más productos para filtrar
+          size: (debouncedStock !== 'all' || debouncedPrice !== 'all') ? "1000" : pageSize.toString(),
         });
 
         if (debouncedSearchTerm.trim() !== '') {
@@ -159,25 +305,103 @@ export default function ProductsPage() {
     return () => {
       isActive = false;
     };
-  }, [debouncedSearchTerm, debouncedCategory, mounted, pageSize]);
+  }, [debouncedSearchTerm, debouncedCategory, debouncedStock, debouncedPrice, mounted, pageSize]);
+
+  // Efecto optimizado para filtros de stock y precio
+  useEffect(() => {
+    const needsAllProducts = (debouncedStock !== 'all' || debouncedPrice !== 'all');
+    const hasAllProducts = allProducts.content.length > 0;
+    
+    // Solo obtener productos si realmente los necesitamos y no los tenemos
+    if (mounted && needsAllProducts && !hasAllProducts) {
+      fetchAllProductsForFiltering();
+    }
+    
+    // Limpiar allProducts cuando ya no se necesiten filtros locales para liberar memoria
+    if (!needsAllProducts && hasAllProducts) {
+      setAllProducts({
+        content: [],
+        totalPages: 0,
+        totalElements: 0,
+        size: 10,
+        number: 0,
+        last: true,
+        first: true
+      });
+    }
+  }, [debouncedStock, debouncedPrice, mounted, allProducts.content.length]);
+
+  const [localPage, setLocalPage] = useState(0)
+
+  // Resetear página local cuando cambian los filtros
+  useEffect(() => {
+    setLocalPage(0)
+  }, [debouncedSearchTerm, debouncedCategory, debouncedStock, debouncedPrice])
 
   const stats = useMemo(() => {
-    const displayedProducts = (debouncedSearchTerm || debouncedCategory !== 'all')
-        ? searchResults.content
-        : products.content;
+    const hasLocalFilters = debouncedStock !== 'all' || debouncedPrice !== 'all';
+    const hasServerFilters = debouncedSearchTerm || debouncedCategory !== 'all';
 
-    const totalProducts = (debouncedSearchTerm || debouncedCategory !== 'all')
-        ? searchResults.totalElements
-        : products.totalElements;
+    // Determinar qué productos usar como base
+    let baseProducts = [];
+    
+    if (hasLocalFilters && allProducts.content.length > 0) {
+      // Usar todos los productos para filtros locales
+      baseProducts = allProducts.content;
+    } else if (hasServerFilters) {
+      // Usar resultados de búsqueda
+      baseProducts = searchResults.content;
+    } else {
+      // Usar productos de página actual
+      baseProducts = products.content;
+    }
 
-    const totalValue = displayedProducts.reduce((sum, product) => {
+    // Aplicar filtros de stock y precio del lado del cliente
+    let filteredProducts = baseProducts;
+    
+    if (debouncedStock !== 'all') {
+      filteredProducts = filteredProducts.filter(product => {
+        const stockStatus = getStockStatus(product);
+        return stockStatus === debouncedStock;
+      });
+    }
+
+    if (debouncedPrice !== 'all') {
+      filteredProducts = filteredProducts.filter(product => {
+        const priceRange = getPriceRange(product.price);
+        return priceRange === debouncedPrice;
+      });
+    }
+
+    const totalProducts = filteredProducts.length;
+
+    // Aplicar paginación local si hay filtros de stock o precio
+    let pagedProducts = filteredProducts;
+    if (hasLocalFilters) {
+      const startIndex = localPage * pageSize;
+      const endIndex = startIndex + pageSize;
+      pagedProducts = filteredProducts.slice(startIndex, endIndex);
+    }
+
+    const totalValue = filteredProducts.reduce((sum, product) => {
       return sum + (product.price * getCurrentQuantity(product))
     }, 0)
 
-    const lowStockProducts = displayedProducts.filter((product) => getCurrentQuantity(product) < 10).length
+    const lowStockProducts = filteredProducts.filter((product) => {
+      const stockStatus = getStockStatus(product);
+      return stockStatus === 'low';
+    }).length
 
-    return { totalProducts, totalValue, lowStockProducts }
-  }, [products, searchResults, debouncedSearchTerm, debouncedCategory])
+    return { 
+      totalProducts, 
+      totalValue, 
+      lowStockProducts, 
+      displayedProducts: hasLocalFilters ? pagedProducts : baseProducts,
+      allFilteredProducts: filteredProducts,
+      hasLocalFilters,
+      currentPageToUse: hasLocalFilters ? localPage : (hasServerFilters ? searchResults.number : currentPage)
+    }
+  }, [allProducts, products, searchResults, debouncedSearchTerm, debouncedCategory, debouncedStock, debouncedPrice, localPage, currentPage, pageSize])
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value)
@@ -187,15 +411,74 @@ export default function ProductsPage() {
     setCategoryFilter(value)
   }
 
+  const handleStockChange = (value: string) => {
+    setStockFilter(value)
+  }
+
+  const handlePriceChange = (value: string) => {
+    setPriceFilter(value)
+  }
+
+  const clearAllFilters = () => {
+    setSearchTerm("")
+    setCategoryFilter("all")
+    setStockFilter("all")
+    setPriceFilter("all")
+    setLocalPage(0) // Reset página local
+  }
+
   const handlePageChange = async (newPage: number) => {
-    try {
-      await fetchProducts(newPage, pageSize, searchTerm, categoryFilter)
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Error al cargar la página",
-        variant: "destructive",
-      })
+    // Si hay filtros de stock o precio activos, usar paginación local
+    if (debouncedStock !== 'all' || debouncedPrice !== 'all') {
+      setLocalPage(newPage)
+    } else {
+      // Sin filtros locales, usar paginación del servidor
+      try {
+        if (debouncedSearchTerm || debouncedCategory !== 'all') {
+          // Hay filtros del servidor, actualizar resultados de búsqueda
+          setIsSearching(true);
+          
+          const params = new URLSearchParams({
+            page: newPage.toString(),
+            size: "1000", // Mantener tamaño grande para filtros locales posteriores
+          });
+
+          if (debouncedSearchTerm.trim() !== '') {
+            params.append('searchTerm', debouncedSearchTerm.trim());
+          }
+
+          if (debouncedCategory !== 'all') {
+            params.append('category', debouncedCategory);
+          }
+
+          const token = localStorage.getItem("token");
+          const response = await fetch(
+              `${BASE_URL}/api/v1/products?${params.toString()}`,
+              {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                  ...(token && { Authorization: `Bearer ${token}` }),
+                },
+              }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            setSearchResults(data);
+          }
+          setIsSearching(false);
+        } else {
+          // Sin filtros, usar paginación básica
+          await fetchProducts(newPage, pageSize)
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Error al cargar la página",
+          variant: "destructive",
+        })
+      }
     }
   }
 
@@ -214,6 +497,9 @@ export default function ProductsPage() {
         description: "El producto se ha eliminado correctamente.",
       })
       setDeleteModal({ isOpen: false, product: null })
+      
+      // Refrescar estadísticas globales después de eliminar
+      await fetchGlobalStats()
     } catch (error) {
       toast({
         title: "Error",
@@ -225,12 +511,15 @@ export default function ProductsPage() {
     }
   }
 
-  const getStockBadge = (quantity: number) => {
+  const getStockBadge = (product: Product) => {
+    const stockStatus = getStockStatus(product)
+    const quantity = getCurrentQuantity(product)
+    
     if (quantity === 0) {
       return <Badge variant="destructive">Sin Stock</Badge>
-    } else if (quantity < 10) {
+    } else if (stockStatus === 'low') {
       return (
-          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+          <Badge variant="secondary" className="bg-red-100 text-red-800">
             Stock Bajo
           </Badge>
       )
@@ -243,10 +532,33 @@ export default function ProductsPage() {
     }
   }
 
-  // Determinar qué productos mostrar
-  const displayedProducts = (debouncedSearchTerm || debouncedCategory !== 'all')
-      ? searchResults
-      : products;
+  // Determinar qué productos mostrar (filtros híbridos)
+  const displayedProducts = useMemo(() => {
+    const hasLocalFilters = stats.hasLocalFilters
+    const hasServerFilters = debouncedSearchTerm || debouncedCategory !== 'all'
+    
+    // Si hay filtros locales, usar información calculada localmente
+    if (hasLocalFilters) {
+      const totalPages = Math.ceil(stats.totalProducts / pageSize)
+      const currentPageToUse = stats.currentPageToUse
+      
+      return {
+        content: stats.displayedProducts,
+        totalElements: stats.totalProducts,
+        totalPages: totalPages,
+        size: pageSize,
+        number: currentPageToUse,
+        first: currentPageToUse === 0,
+        last: currentPageToUse >= totalPages - 1 || totalPages === 0
+      }
+    } else if (hasServerFilters) {
+      // Usar resultados de búsqueda
+      return searchResults
+    } else {
+      // Usar productos principales del servidor
+      return products
+    }
+  }, [stats, pageSize, searchResults, products, debouncedSearchTerm, debouncedCategory])
 
   // Evitar renderizado hasta que el componente esté mounted
   if (!mounted) {
@@ -300,7 +612,7 @@ export default function ProductsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Productos</p>
-                    <p className="text-2xl font-bold text-[#003B73]">{stats.totalProducts}</p>
+                    <p className="text-2xl font-bold text-[#003B73]">{globalStats.totalProducts}</p>
                   </div>
                   <div className="w-12 h-12 bg-[#E0F0FF] rounded-lg flex items-center justify-center">
                     <Package className="w-6 h-6 text-[#007BFF]" />
@@ -315,7 +627,7 @@ export default function ProductsPage() {
                   <div>
                     <p className="text-sm font-medium text-gray-600">Valor Total</p>
                     <p className="text-2xl font-bold text-[#003B73]">
-                      ${stats.totalValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      ${globalStats.totalValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-[#E0F0FF] rounded-lg flex items-center justify-center">
@@ -330,7 +642,7 @@ export default function ProductsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Stock Bajo</p>
-                    <p className="text-2xl font-bold text-[#003B73]">{stats.lowStockProducts}</p>
+                    <p className="text-2xl font-bold text-[#003B73]">{globalStats.lowStockProducts}</p>
                   </div>
                   <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                     <AlertTriangle className="w-6 h-6 text-yellow-600" />
@@ -374,7 +686,7 @@ export default function ProductsPage() {
                       </div>
                   )}
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Filter className="w-4 h-4 text-gray-500"/>
                   <Select
                       value={categoryFilter}
@@ -392,6 +704,46 @@ export default function ProductsPage() {
                       ))}
                     </SelectContent>
                   </Select>
+
+                  <Select
+                      value={stockFilter}
+                      onValueChange={handleStockChange}
+                  >
+                    <SelectTrigger className="w-44 border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF]">
+                      <SelectValue placeholder="Filtrar por stock"/>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los stocks</SelectItem>
+                      <SelectItem value="low">Stock Bajo</SelectItem>
+                      <SelectItem value="in-stock">En Stock</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                      value={priceFilter}
+                      onValueChange={handlePriceChange}
+                  >
+                    <SelectTrigger className="w-48 border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF]">
+                      <SelectValue placeholder="Filtrar por precio"/>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los precios</SelectItem>
+                      <SelectItem value="range1">$0 - $1,000</SelectItem>
+                      <SelectItem value="range2">$1,001 - $5,000</SelectItem>
+                      <SelectItem value="range3">$5,001 o más</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {(searchTerm || categoryFilter !== 'all' || stockFilter !== 'all' || priceFilter !== 'all') && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearAllFilters}
+                      className="text-gray-600 border-gray-300 hover:bg-gray-50"
+                    >
+                      Limpiar Filtros
+                    </Button>
+                  )}
                 </div>
               </div>
 
@@ -446,7 +798,7 @@ export default function ProductsPage() {
                                   ${product.price.toLocaleString("en-US", {minimumFractionDigits: 2})}
                                 </TableCell>
                                 <TableCell className="font-medium">{getCurrentQuantity(product)}</TableCell>
-                                <TableCell>{getStockBadge(getCurrentQuantity(product))}</TableCell>
+                                <TableCell>{getStockBadge(product)}</TableCell>
                                 <TableCell>
                                   <div className="flex items-center justify-center space-x-2">
                                     <Button
@@ -474,37 +826,111 @@ export default function ProductsPage() {
                     </div>
 
                     {/* Pagination */}
-                    <div className="mt-4 flex items-center justify-between">
+                    <div className="mt-4 flex items-center justify-between flex-wrap gap-4">
                       <div className="text-sm text-gray-600">
-                        Mostrando {displayedProducts.content.length} de {displayedProducts.totalElements} productos
+                        Mostrando {(displayedProducts.number * displayedProducts.size) + 1}-{Math.min((displayedProducts.number * displayedProducts.size) + displayedProducts.content.length, displayedProducts.totalElements)} de {displayedProducts.totalElements} productos
+                        <br />
+                        Página {displayedProducts.number + 1} de {displayedProducts.totalPages}
                       </div>
+                      
+                      {/* Selector de tamaño de página */}
                       <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-600">Mostrar:</span>
+                        <Select 
+                          value={pageSize.toString()} 
+                          onValueChange={(value) => {
+                            const newSize = parseInt(value)
+                            setPageSize(newSize)
+                            handlePageChange(0) // Reset to first page
+                          }}
+                        >
+                          <SelectTrigger className="w-20">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="10">10</SelectItem>
+                            <SelectItem value="25">25</SelectItem>
+                            <SelectItem value="50">50</SelectItem>
+                            <SelectItem value="100">100</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        {/* Botón primera página */}
+                        {displayedProducts.number > 5 && (
+                          <>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(0)}
+                            >
+                              1
+                            </Button>
+                            <span className="text-gray-400">...</span>
+                          </>
+                        )}
+                        
+                        {/* Botón anterior */}
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handlePageChange(currentPage - 1)}
-                            disabled={currentPage === 0}
+                            onClick={() => handlePageChange(displayedProducts.number - 1)}
+                            disabled={displayedProducts.first}
                         >
                           <ChevronLeft className="h-4 w-4"/>
                         </Button>
-                        {Array.from({length: displayedProducts.totalPages}, (_, i) => (
+                        
+                        {/* Páginas del rango */}
+                        {Array.from({length: Math.min(displayedProducts.totalPages, 10)}, (_, i) => {
+                          // Mostrar solo un rango de páginas alrededor de la página actual
+                          const totalPages = displayedProducts.totalPages;
+                          const currentPageNum = displayedProducts.number;
+                          let startPage = Math.max(0, currentPageNum - 4);
+                          let endPage = Math.min(totalPages - 1, startPage + 9);
+                          
+                          // Ajustar si estamos cerca del final
+                          if (endPage - startPage < 9) {
+                            startPage = Math.max(0, endPage - 9);
+                          }
+                          
+                          if (i < startPage || i > endPage) return null;
+                          
+                          return (
                             <Button
                                 key={i}
-                                variant={currentPage === i ? "default" : "outline"}
+                                variant={displayedProducts.number === i ? "default" : "outline"}
                                 size="sm"
                                 onClick={() => handlePageChange(i)}
                             >
                               {i + 1}
                             </Button>
-                        ))}
+                          );
+                        }).filter(Boolean)}
+                        
+                        {/* Botón siguiente */}
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handlePageChange(currentPage + 1)}
-                            disabled={currentPage === displayedProducts.totalPages - 1}
+                            onClick={() => handlePageChange(displayedProducts.number + 1)}
+                            disabled={displayedProducts.last}
                         >
                           <ChevronRight className="h-4 w-4"/>
                         </Button>
+                        
+                        {/* Botón última página */}
+                        {displayedProducts.number < displayedProducts.totalPages - 6 && (
+                          <>
+                            <span className="text-gray-400">...</span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(displayedProducts.totalPages - 1)}
+                            >
+                              {displayedProducts.totalPages}
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </>
