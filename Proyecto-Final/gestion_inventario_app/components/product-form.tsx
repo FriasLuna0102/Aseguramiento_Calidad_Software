@@ -143,7 +143,11 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
           category: formData.category,
           price: price,
           quantity: quantity,
+          stockMinimalQuantity: stockMinimalQuantity
         })
+        
+        console.log("Datos de actualización a enviar:", updateData) // Debug log
+        
         await updateProduct(product.id, updateData)
         toast({
           title: "Producto actualizado",

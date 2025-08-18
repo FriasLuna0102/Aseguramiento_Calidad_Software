@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import type { Product, PaginatedProducts } from "@/types/product"
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:8080'
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:8080'
 
 export function useProducts() {
   const [products, setProducts] = useState<PaginatedProducts>({

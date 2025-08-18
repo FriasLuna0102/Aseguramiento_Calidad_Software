@@ -780,7 +780,6 @@ export default function ProductsPage() {
                             <TableHead className="font-semibold text-[#003B73]">Categoría</TableHead>
                             <TableHead className="font-semibold text-[#003B73]">Precio</TableHead>
                             <TableHead className="font-semibold text-[#003B73]">Cantidad</TableHead>
-                            <TableHead className="font-semibold text-[#003B73]">Stock Mínimo</TableHead>
                             <TableHead className="font-semibold text-[#003B73]">Estado</TableHead>
                             <TableHead className="font-semibold text-[#003B73] text-center">Acciones</TableHead>
                           </TableRow>
@@ -799,9 +798,6 @@ export default function ProductsPage() {
                                   ${product.price.toLocaleString("en-US", {minimumFractionDigits: 2})}
                                 </TableCell>
                                 <TableCell className="font-medium">{getCurrentQuantity(product)}</TableCell>
-                                <TableCell className="font-medium text-gray-600">
-                                  {product.stockMinimalQuantity || 0}
-                                </TableCell>
                                 <TableCell>{getStockBadge(product)}</TableCell>
                                 <TableCell>
                                   <div className="flex items-center justify-center space-x-2">

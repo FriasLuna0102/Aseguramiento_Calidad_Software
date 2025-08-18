@@ -45,6 +45,11 @@ export function updateProductForAPI(productData: {
     delete result.quantity
   }
   
+  // Asegurar que stockMinimalQuantity se incluya si está presente
+  if (productData.stockMinimalQuantity !== undefined) {
+    result.stockMinimalQuantity = productData.stockMinimalQuantity
+  }
+  
   return result
 }
 
