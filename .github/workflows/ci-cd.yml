@@ -51,36 +51,16 @@ jobs:
         run: |
           rsync -az -e "ssh -i ~/.ssh/id_rsa" \
             ./Proyecto-Final/ \
-            root@${{ secrets.SERVER_IP }}:/opt/inventario
+            root@${{ secrets.SERVER_IP }}:/opt/
 
-      - name: Install Docker & Compose + Deploy
+
+      - name: Deploy via Docker Compose
         run: |
           ssh -i ~/.ssh/id_rsa root@${{ secrets.SERVER_IP }} << 'EOF'
-            # Crear directorio si no existe
-            mkdir -p /opt/inventario
-
-            # Instalar Docker si no está
-            if ! command -v docker &> /dev/null; then
-              apt update
-              apt install -y docker.io curl
-              systemctl enable --now docker
-            fi
-
-            # Instalar Docker Compose V2 si no está
-            DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-            mkdir -p $DOCKER_CONFIG/cli-plugins
-            if ! docker compose version &> /dev/null; then
-              curl -SL https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
-              chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-            fi
-
-            # Configurar variables de entorno para Spring
-            echo "SPRING_DATASOURCE_USERNAME=postgres" > /opt/inventario/.env
-            echo "SPRING_DATASOURCE_PASSWORD=postgres" >> /opt/inventario/.env
-
-            # Levantar contenedores
-            cd /opt/inventario
-            docker compose down || true
+            cd /opt/Proyecto-Final/gestion_inventario
+            echo "SPRING_DATASOURCE_USERNAME=postgres" > .env
+            echo "SPRING_DATASOURCE_PASSWORD=postgres" >> .env
+            docker compose down
             docker compose up -d --build
           EOF
 
@@ -105,30 +85,15 @@ jobs:
         run: |
           rsync -az -e "ssh -i ~/.ssh/id_rsa" \
             ./Proyecto-Final/ \
-            root@${{ secrets.SERVER_IP }}:/opt/inventario
+            root@${{ secrets.SERVER_IP }}:/opt/
 
-      - name: Install Docker & Compose + Deploy
+
+      - name: Deploy via Docker Compose
         run: |
           ssh -i ~/.ssh/id_rsa root@${{ secrets.SERVER_IP }} << 'EOF'
-            mkdir -p /opt/inventario
-
-            if ! command -v docker &> /dev/null; then
-              apt update
-              apt install -y docker.io curl
-              systemctl enable --now docker
-            fi
-
-            DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-            mkdir -p $DOCKER_CONFIG/cli-plugins
-            if ! docker compose version &> /dev/null; then
-              curl -SL https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
-              chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-            fi
-
-            echo "SPRING_DATASOURCE_USERNAME=postgres" > /opt/inventario/.env
-            echo "SPRING_DATASOURCE_PASSWORD=postgres" >> /opt/inventario/.env
-
-            cd /opt/inventario
-            docker compose down || true
+            cd /opt/Proyecto-Final/gestion_inventario
+            echo "SPRING_DATASOURCE_USERNAME=postgres" > .env
+            echo "SPRING_DATASOURCE_PASSWORD=postgres" >> .env
+            docker compose down
             docker compose up -d --build
           EOF
