@@ -57,7 +57,7 @@ jobs:
       - name: Deploy via Docker Compose
         run: |
           ssh -i ~/.ssh/id_rsa root@${{ secrets.SERVER_IP }} << 'EOF'
-            cd /opt/Proyecto-Final/gestion_inventario
+            cd /opt/gestion_inventario
             echo "SPRING_DATASOURCE_USERNAME=postgres" > .env
             echo "SPRING_DATASOURCE_PASSWORD=postgres" >> .env
             docker compose down
@@ -91,7 +91,7 @@ jobs:
       - name: Deploy via Docker Compose
         run: |
           ssh -i ~/.ssh/id_rsa root@${{ secrets.SERVER_IP }} << 'EOF'
-            cd /opt/Proyecto-Final/gestion_inventario
+            cd /opt/gestion_inventario
             echo "SPRING_DATASOURCE_USERNAME=postgres" > .env
             echo "SPRING_DATASOURCE_PASSWORD=postgres" >> .env
             docker compose down
