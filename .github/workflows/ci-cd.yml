@@ -60,8 +60,8 @@ jobs:
             cd /opt/inventario
             echo "SPRING_DATASOURCE_USERNAME=postgres" > .env
             echo "SPRING_DATASOURCE_PASSWORD=postgres" >> .env
-            docker-compose down
-            docker-compose up -d --build
+            docker compose down
+            docker compose up -d --build
           EOF
 
   deploy-prod:
@@ -94,6 +94,6 @@ jobs:
             cd /opt/inventario
             echo "SPRING_DATASOURCE_USERNAME=postgres" > .env
             echo "SPRING_DATASOURCE_PASSWORD=postgres" >> .env
-              docker-compose down
-              docker-compose up -d --build
+              docker compose down
+              docker compose up -d --build
           EOF
