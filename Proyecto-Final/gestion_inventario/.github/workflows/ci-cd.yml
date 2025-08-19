@@ -26,6 +26,12 @@ jobs:
       - name: Build and run unit tests
         run: ./gradlew clean build test
 
+      - name: Jacoco Report
+        run: ./gradlew jacocoTestReport
+
+      - name: Cucumber Report
+        run: ./gradlew cucumberTests
+
   deploy-test:
     if: github.ref == 'refs/heads/frias'
     needs: build-and-test
