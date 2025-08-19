@@ -60,8 +60,14 @@ jobs:
             cd /opt/gestion_inventario
             echo "SPRING_DATASOURCE_USERNAME=postgres" > .env
             echo "SPRING_DATASOURCE_PASSWORD=postgres" >> .env
+            
+            cd ../gestion_inventario_app
+            echo "NEXT_PUBLIC_BASE_URL=http://gestion-test.friaslunaa.ninja:8080" >> .env
+            cd ../gestion_inventario
+            
             docker compose down
             docker compose up -d --build
+            
           EOF
 
   deploy-prod:
