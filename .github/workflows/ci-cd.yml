@@ -85,18 +85,18 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.SERVER_IP_PROD }} >> ~/.ssh/known_hosts
 
       - name: Sync project to server
         run: |
           rsync -az -e "ssh -i ~/.ssh/id_rsa" \
             ./Proyecto-Final/ \
-            root@${{ secrets.SERVER_IP }}:/opt/
+            root@${{ secrets.SERVER_IP_PROD }}:/opt/
 
 
       - name: Deploy via Docker Compose
         run: |
-          ssh -i ~/.ssh/id_rsa root@${{ secrets.SERVER_IP }} << 'EOF'
+          ssh -i ~/.ssh/id_rsa root@${{ secrets.SERVER_IP_PROD }} << 'EOF'
             cd /opt/gestion_inventario
             echo "SPRING_DATASOURCE_USERNAME=postgres" > .env
             echo "SPRING_DATASOURCE_PASSWORD=postgres" >> .env
