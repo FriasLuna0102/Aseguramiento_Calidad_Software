@@ -46,7 +46,7 @@ public class JwtUtil {
                 .collect(Collectors.toList()));
 
         Date expirationDate = new Date(new Date().getTime() + jwtExpirationMs);
-        jwtServices.saveToken(new JwtResponse(token, userPrincipal.getUsername(), expirationDate));
+        jwtServices.saveToken(new JwtResponse(token, userPrincipal.getUsername(), expirationDate, userPrincipal.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList())));
 
         return token;
     }

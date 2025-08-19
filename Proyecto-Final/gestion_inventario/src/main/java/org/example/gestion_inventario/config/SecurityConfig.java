@@ -38,7 +38,7 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfig.setAllowedOrigins(List.of("http://localhost:3001"));
+                    corsConfig.setAllowedOriginPatterns(List.of("*"));
                     corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     corsConfig.setAllowedHeaders(List.of("*"));
                     corsConfig.setAllowCredentials(true);
@@ -85,7 +85,12 @@ public class SecurityConfig {
                 .roles("EMPLOYEE")
                 .build();
 
-        return new InMemoryUserDetailsManager(admin, user);
+        UserDetails guest = User.withUsername("guest")
+                .password(encoder.encode("guest123"))
+                .roles("GUEST")
+                .build();
+
+        return new InMemoryUserDetailsManager(admin, user, guest);
     }
     @Bean
     public AuthenticationProvider authenticationProvider() {

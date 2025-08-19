@@ -57,11 +57,17 @@ jobs:
       - name: Deploy via Docker Compose
         run: |
           ssh -i ~/.ssh/id_rsa root@${{ secrets.SERVER_IP }} << 'EOF'
-            cd /opt/inventario
+            cd /opt/gestion_inventario
             echo "SPRING_DATASOURCE_USERNAME=postgres" > .env
             echo "SPRING_DATASOURCE_PASSWORD=postgres" >> .env
+            
+            cd ../gestion_inventario_app
+            echo "NEXT_PUBLIC_BASE_URL=http://gestion-test.friaslunaa.ninja:8080" >> .env
+            cd ../gestion_inventario
+            
             docker compose down
             docker compose up -d --build
+            
           EOF
 
   deploy-prod:
@@ -91,9 +97,14 @@ jobs:
       - name: Deploy via Docker Compose
         run: |
           ssh -i ~/.ssh/id_rsa root@${{ secrets.SERVER_IP }} << 'EOF'
-            cd /opt/inventario
+            cd /opt/gestion_inventario
             echo "SPRING_DATASOURCE_USERNAME=postgres" > .env
             echo "SPRING_DATASOURCE_PASSWORD=postgres" >> .env
-              docker compose down
-              docker compose up -d --build
+
+            cd ../gestion_inventario_app
+            echo "NEXT_PUBLIC_BASE_URL=http://gestion-prod.friaslunaa.ninja:8080" >> .env
+            cd ../gestion_inventario
+
+            docker compose down
+            docker compose up -d --build
           EOF

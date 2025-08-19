@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -20,13 +22,9 @@ public class JwtResponse {
     private String username;
     private boolean valid = true;
     private Date expirationDate;
-    @ElementCollection
-    @CollectionTable(
-            name = "jwt_roles",
-            joinColumns = @JoinColumn(name = "token_id")
-    )
-    @Column(name = "role")
-    private List<String> roles;
+
+    @Column(name = "roles")
+    private String rolesString;
 
     public JwtResponse(String accessToken, String username, Date expirationDate) {
         this.token = accessToken;
@@ -37,11 +35,29 @@ public class JwtResponse {
         this.token = accessToken;
         this.username = username;
         this.expirationDate = expirationDate;
-        this.roles = roles;
+        this.setRoles(roles);
+
     }
 
 
     public JwtResponse() {
 
+    }
+
+    @Transient
+    public List<String> getRoles() {
+        if (rolesString == null || rolesString.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        return List.of(rolesString.split(","));
+    }
+
+    @Transient
+    public void setRoles(List<String> roles) {
+        if (roles == null || roles.isEmpty()) {
+            this.rolesString = "";
+        } else {
+            this.rolesString = String.join(",", roles);
+        }
     }
 }

@@ -34,4 +34,9 @@ public class ProductDto {
     @Min(value = 0, message = "Current quantity must be greater than or equal to 0")
     @Max(value = 999999, message = "Current quantity must be less than 1000000")
     private Integer quantityCurrent;
+
+    @NotNull(message = "Stock Minimal quantity cannot be null")
+    @Min(value = 0, message = "Stock Minimal quantity must be greater than or equal to 0")
+    @Max(value = 999999, message = "Stock Minimal quantity must be less than 1000000")
+    private Integer stockMinimalQuantity;
 }

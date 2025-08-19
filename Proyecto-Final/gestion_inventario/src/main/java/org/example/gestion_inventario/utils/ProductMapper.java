@@ -16,6 +16,7 @@ public class ProductMapper {
                 .price(product.getPrice())
                 .quantityInitial(product.getQuantityInitial())
                 .quantityCurrent(product.getQuantityCurrent())
+                .stockMinimalQuantity(product.getStockMinimalQuantity())
                 .build();
     }
 }

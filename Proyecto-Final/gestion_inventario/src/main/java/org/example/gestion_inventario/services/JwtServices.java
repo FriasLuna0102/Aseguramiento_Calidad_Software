@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -91,5 +92,10 @@ public class JwtServices {
     @Timed("jwt.getExpirationTime")
     private long getTimeUntilExpiration(Date expirationDate) {
         return Math.max(0, expirationDate.getTime() - System.currentTimeMillis());
+    }
+
+    @Timed("jwt.getAllTokens")
+    public List<JwtResponse> getAllTokens() {
+        return jwtRepository.findAll();
     }
 }
