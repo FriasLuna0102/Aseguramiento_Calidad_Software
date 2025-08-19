@@ -6,13 +6,14 @@ CREATE SEQUENCE IF NOT EXISTS revinfo_seq
     CACHE 1;
 
 CREATE TABLE revinfo (
-                         rev BIGSERIAL PRIMARY KEY,
-                         revtstmp BIGINT
+                         id BIGSERIAL PRIMARY KEY,
+                         timestamp BIGINT,
+                         username VARCHAR(255)
 );
 
 CREATE TABLE products_aud (
                               id BIGINT NOT NULL,
-                              rev BIGINT NOT NULL REFERENCES revinfo(rev),
+                              rev BIGINT NOT NULL REFERENCES revinfo(id),
                               revtype SMALLINT,
                               name VARCHAR(255),
                               description TEXT,
@@ -21,5 +22,7 @@ CREATE TABLE products_aud (
                               quantity_initial INT,
                               quantity_current INT,
                               stock_minimal_quantity INT,
+                              date_created TIMESTAMP,
+                              date_updated TIMESTAMP,
                               PRIMARY KEY (id, rev)
 );

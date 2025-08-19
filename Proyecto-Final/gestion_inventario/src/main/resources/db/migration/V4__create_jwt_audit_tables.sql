@@ -1,6 +1,6 @@
 CREATE TABLE jwt_tokens_aud (
                                 token VARCHAR(500) NOT NULL,
-                                rev INTEGER NOT NULL REFERENCES revinfo(rev),
+                                rev BIGINT NOT NULL REFERENCES revinfo(id),
                                 revtype SMALLINT,
                                 type VARCHAR(10),
                                 roles VARCHAR(500),
