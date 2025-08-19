@@ -14,7 +14,8 @@ public class ProductTest {
                 "Test Category",
                 BigDecimal.valueOf(100.00),
                 10,
-                5
+                5,
+                25
         );
 
         assertNotNull(product);
@@ -24,6 +25,7 @@ public class ProductTest {
         assertEquals(BigDecimal.valueOf(100.00), product.getPrice());
         assertEquals(10, product.getQuantityInitial());
         assertEquals(5, product.getQuantityCurrent());
+        assertEquals(25, product.getStockMinimalQuantity());
     }
 
     @Test
@@ -36,6 +38,7 @@ public class ProductTest {
         product.setPrice(BigDecimal.valueOf(100.00));
         product.setQuantityInitial(10);
         product.setQuantityCurrent(5);
+        product.setStockMinimalQuantity(25);
 
         assertEquals("Test Product", product.getName());
         assertEquals("Test Description", product.getDescription());
@@ -43,5 +46,6 @@ public class ProductTest {
         assertEquals(BigDecimal.valueOf(100.00), product.getPrice());
         assertEquals(10, product.getQuantityInitial());
         assertEquals(5, product.getQuantityCurrent());
+        assertEquals(25, product.getStockMinimalQuantity());
     }
 }

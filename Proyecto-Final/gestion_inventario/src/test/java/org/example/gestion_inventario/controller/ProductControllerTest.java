@@ -48,6 +48,7 @@ class ProductControllerTest {
         testProductDto.setPrice(BigDecimal.valueOf(100.00));
         testProductDto.setQuantityInitial(10);
         testProductDto.setQuantityCurrent(5);
+        testProductDto.setStockMinimalQuantity(25);
 
         testProductResponse = ProductResponse.builder()
                 .id(1L)
@@ -57,6 +58,7 @@ class ProductControllerTest {
                 .price(testProductDto.getPrice())
                 .quantityInitial(testProductDto.getQuantityInitial())
                 .quantityCurrent(testProductDto.getQuantityCurrent())
+                .stockMinimalQuantity(testProductDto.getStockMinimalQuantity())
                 .build();
     }
 

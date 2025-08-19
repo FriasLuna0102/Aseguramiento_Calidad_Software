@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.GetMapping;
 
 
 @Service
@@ -42,6 +43,7 @@ public class ProductService {
             product.setPrice(dto.getPrice());
             product.setQuantityInitial(dto.getQuantityInitial());
             product.setQuantityCurrent(dto.getQuantityCurrent());
+            product.setStockMinimalQuantity(dto.getStockMinimalQuantity());
 
             Product saved = productRepository.save(product);
             return productMapper.toResponse(saved);
@@ -102,6 +104,8 @@ public class ProductService {
                     .ifPresent(existing::setQuantityInitial);
             Optional.ofNullable(dto.getQuantityCurrent())
                     .ifPresent(existing::setQuantityCurrent);
+            Optional.ofNullable(dto.getStockMinimalQuantity())
+                    .ifPresent(existing::setStockMinimalQuantity);
 
             Product saved = productRepository.save(existing);
             return productMapper.toResponse(saved);
@@ -141,6 +145,21 @@ public class ProductService {
         } catch (Exception e) {
             log.error("Error deleting product: ", e);
             throw new ServiceException("Error deleting product", e);
+        }
+    }
+
+    @Timed("products.getStockMinimalQuantity")
+    @Transactional
+    public int getStockMinimalQuantity(Long id) {
+        try {
+            Product product = productRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + id));
+            return product.getStockMinimalQuantity();
+        } catch (EntityNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error finding product: ", e);
+            throw new ServiceException("Error finding product", e);
         }
     }
 

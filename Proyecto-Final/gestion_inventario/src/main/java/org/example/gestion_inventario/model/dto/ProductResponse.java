@@ -17,4 +17,5 @@ public class ProductResponse {
     private BigDecimal price;
     private int quantityInitial;
     private int quantityCurrent;
+    private int stockMinimalQuantity;
 }

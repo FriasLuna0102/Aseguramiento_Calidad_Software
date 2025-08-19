@@ -4,9 +4,11 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { ProductForm } from "@/components/product-form"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function AddProductPage() {
   const router = useRouter()
+  const { canCreate } = useAuth()
   const [mounted, setMounted] = useState(false)
   const [userName, setUserName] = useState("Usuario")
 
@@ -16,6 +18,12 @@ export default function AddProductPage() {
     const token = localStorage.getItem("token")
     if (!token) {
       router.push("/login")
+      return
+    }
+
+    // Verificar si el usuario puede crear productos
+    if (!canCreate()) {
+      router.push("/products") // Redirigir si no tiene permisos
       return
     }
 

@@ -31,6 +31,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
     category: "",
     price: "",
     quantity: "",
+    stockMinimalQuantity: "",
   })
 
   const [errors, setErrors] = useState<Partial<ProductFormData>>({})
@@ -45,6 +46,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
         category: product.category,
         price: product.price.toString(),
         quantity: getCurrentQuantity(product).toString(),
+        stockMinimalQuantity: product.stockMinimalQuantity.toString(),
       })
       setTimeout(() => {
         setIsFormReady(true)
@@ -86,6 +88,15 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
         newErrors.quantity = "La cantidad debe ser un número entero mayor o igual a 0"
       }
     }
+    
+    if (!formData.stockMinimalQuantity.trim()) {
+      newErrors.stockMinimalQuantity = "El stock mínimo es obligatorio"
+    } else {
+      const stockMinimalQuantity = parseInt(formData.stockMinimalQuantity, 10)
+      if (isNaN(stockMinimalQuantity) || stockMinimalQuantity < 0 || !Number.isInteger(Number(formData.stockMinimalQuantity))) {
+        newErrors.stockMinimalQuantity = "El stock mínimo debe ser un número entero mayor o igual a 0"
+      }
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -103,6 +114,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
     try {
       const price = parseFloat(formData.price)
       const quantity = parseInt(formData.quantity, 10)
+      const stockMinimalQuantity = parseInt(formData.stockMinimalQuantity, 10)
 
       // Validación adicional para asegurarnos de que los números son válidos
       if (isNaN(price) || price <= 0) {
@@ -119,6 +131,7 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
         category: formData.category,
         price: price,
         quantity: quantity,
+        stockMinimalQuantity: stockMinimalQuantity
       })
 
       console.log("Datos del producto a enviar:", productData) // Debug log
@@ -130,7 +143,11 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
           category: formData.category,
           price: price,
           quantity: quantity,
+          stockMinimalQuantity: stockMinimalQuantity
         })
+        
+        console.log("Datos de actualización a enviar:", updateData) // Debug log
+        
         await updateProduct(product.id, updateData)
         toast({
           title: "Producto actualizado",
@@ -294,6 +311,26 @@ export function ProductForm({ product, isEditing = false }: ProductFormProps) {
                         placeholder="0"
                     />
                     {errors.quantity && <p className="text-red-500 text-sm">{errors.quantity}</p>}
+                  </div>
+                  
+                  <div className="flex flex-col space-y-2">
+                    <Label htmlFor="stock-minimal-quantity" className="text-[#003B73] font-medium">
+                      Stock Minimal Quantity *
+                    </Label>
+                    <Input
+                        id="stock-minimal-quantity"
+                        data-testid="product-stock-minimal-quantity"
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={formData.stockMinimalQuantity}
+                        onChange={(e) => handleInputChange("stockMinimalQuantity", e.target.value)}
+                        className={`border-gray-300 focus:border-[#007BFF] focus:ring-[#007BFF] ${
+                            errors.stockMinimalQuantity ? "border-red-500" : ""
+                        }`}
+                        placeholder="0"
+                    />
+                    {errors.stockMinimalQuantity && <p className="text-red-500 text-sm">{errors.stockMinimalQuantity}</p>}
                   </div>
                 </div>
 

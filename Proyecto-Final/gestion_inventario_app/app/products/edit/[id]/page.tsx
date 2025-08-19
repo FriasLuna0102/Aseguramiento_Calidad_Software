@@ -4,13 +4,17 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { ProductForm } from "@/components/product-form"
+import { useAuth } from "@/hooks/useAuth"
 import type { Product } from "@/types/product"
 import { AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:8080'
+
 export default function EditProductPage() {
   const params = useParams()
   const router = useRouter()
+  const { canEdit } = useAuth()
   const productId = params.id as string
 
   const [mounted, setMounted] = useState(false)
@@ -29,6 +33,12 @@ export default function EditProductPage() {
         return
       }
 
+      // Verificar si el usuario puede editar productos
+      if (!canEdit()) {
+        router.push("/products") // Redirigir si no tiene permisos
+        return
+      }
+
       const storedUser = localStorage.getItem("user")
       if (storedUser) {
         try {
@@ -42,7 +52,7 @@ export default function EditProductPage() {
       try {
         console.log("Obteniendo producto con ID:", productId)
 
-        const response = await fetch(`http://localhost:8080/api/v1/products/${productId}`, {
+        const response = await fetch(`${BASE_URL}/api/v1/products/${productId}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
