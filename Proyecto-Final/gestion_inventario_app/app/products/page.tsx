@@ -14,7 +14,7 @@ import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal"
 import { useProducts } from "@/hooks/useProducts"
 import { useAuth } from "@/hooks/useAuth"
 import { type Product, CATEGORIES, PaginatedProducts } from "@/types/product"
-import { getCurrentQuantity, getStockStatus, getPriceRange } from "@/lib/productUtils"
+import { getCurrentQuantity, getStockStatus, getPriceRange, getMinimalStock } from "@/lib/productUtils"
 import { Search, Plus, Edit, Trash2, Package, TrendingUp, AlertTriangle, Filter } from "lucide-react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useDebounce } from "@/hooks/useDebounce"
@@ -784,6 +784,7 @@ export default function ProductsPage() {
                             <TableHead className="font-semibold text-[#003B73]">Categoría</TableHead>
                             <TableHead className="font-semibold text-[#003B73]">Precio</TableHead>
                             <TableHead className="font-semibold text-[#003B73]">Cantidad</TableHead>
+                            <TableHead className="font-semibold text-[#003B73]">Stock Mínimo</TableHead>
                             <TableHead className="font-semibold text-[#003B73]">Estado</TableHead>
                             {(canEdit() || canDelete()) && (
                               <TableHead className="font-semibold text-[#003B73] text-center">Acciones</TableHead>
@@ -804,6 +805,7 @@ export default function ProductsPage() {
                                   ${product.price.toLocaleString("en-US", {minimumFractionDigits: 2})}
                                 </TableCell>
                                 <TableCell className="font-medium">{getCurrentQuantity(product)}</TableCell>
+                                <TableCell className="font-medium text-gray-600">{getMinimalStock(product)}</TableCell>
                                 <TableCell>{getStockBadge(product)}</TableCell>
                                 {(canEdit() || canDelete()) && (
                                   <TableCell>
