@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/hooks/useAuth"
 import type { Token, TokenListResponse } from "@/types/token"
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:8080'
 
 export function useTokens() {
   const { toast } = useToast()
+  const { handleUnauthorized } = useAuth()
   const [tokens, setTokens] = useState<Token[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -25,6 +27,11 @@ export function useTokens() {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
       })
+
+      if (response.status === 401) {
+        handleUnauthorized()
+        return
+      }
 
       if (!response.ok) {
         throw new Error(`Error al cargar tokens: ${response.status}`)
@@ -54,6 +61,11 @@ export function useTokens() {
           ...(authToken && { Authorization: `Bearer ${authToken}` }),
         },
       })
+
+      if (response.status === 401) {
+        handleUnauthorized()
+        return
+      }
 
       if (!response.ok) {
         throw new Error(`Error al invalidar token: ${response.status}`)
