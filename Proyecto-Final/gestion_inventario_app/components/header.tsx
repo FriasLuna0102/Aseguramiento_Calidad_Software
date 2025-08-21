@@ -1,6 +1,6 @@
 "use client"
 
-import { User, LogOut, Package } from "lucide-react"
+import { User, LogOut, Package, Shield, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -11,16 +11,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/hooks/useAuth"
+import { useRouter } from "next/navigation"
 
 interface HeaderProps {
   userName?: string
 }
 
 export function Header({ userName = "Usuario" }: HeaderProps) {
-  const { logout } = useAuth()
+  const { logout, isAdmin } = useAuth()
+  const router = useRouter()
 
   const handleLogout = async () => {
     await logout()
+  }
+
+  const handleAdminTokens = () => {
+    router.push("/admin/tokens")
   }
 
   return (
@@ -48,6 +54,15 @@ export function Header({ userName = "Usuario" }: HeaderProps) {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
             <DropdownMenuSeparator />
+            {isAdmin() && (
+              <>
+                <DropdownMenuItem onClick={handleAdminTokens}>
+                  <Shield className="w-4 h-4 mr-2" />
+                  Administrar Tokens
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
               <LogOut className="w-4 h-4 mr-2" />
               Cerrar Sesión

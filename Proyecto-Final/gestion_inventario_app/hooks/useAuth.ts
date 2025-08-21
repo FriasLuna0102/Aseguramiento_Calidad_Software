@@ -102,6 +102,11 @@ export function useAuth() {
     return !hasRole('ROLE_GUEST')
   }
 
+  const isAdmin = (): boolean => {
+    // Solo los usuarios ROLE_ADMIN pueden acceder a administración de tokens
+    return hasRole('ROLE_ADMIN')
+  }
+
   return {
     logout,
     isAuthenticated,
@@ -111,5 +116,6 @@ export function useAuth() {
     canDelete,
     canCreate,
     canEdit,
+    isAdmin,
   }
 }
