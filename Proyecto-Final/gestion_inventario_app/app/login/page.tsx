@@ -55,6 +55,11 @@ export default function LoginPage() {
         
         const token = data.token || data.accessToken || data.jwt
         if (token) {
+          // Limpiar cualquier dato previo
+          localStorage.removeItem("token")
+          localStorage.removeItem("user")
+          
+          // Guardar nuevos datos
           localStorage.setItem("token", token)
           
           // Guardar información completa del usuario, incluyendo el rol desde rolesString
@@ -70,11 +75,16 @@ export default function LoginPage() {
           
           const userName = userInfo.name || userInfo.username
           
+          // Mostrar toast de éxito
           toast({
             title: "Inicio de sesión exitoso",
             description: `Bienvenido ${userName} al sistema de inventario`,
           })
-          router.push("/products")
+          
+          // Navegar usando window.location para forzar la recarga completa
+          setTimeout(() => {
+            window.location.href = "/products"
+          }, 1500)
           return
         }
       }

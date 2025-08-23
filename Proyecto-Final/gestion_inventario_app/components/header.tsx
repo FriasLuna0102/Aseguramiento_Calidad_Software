@@ -37,6 +37,10 @@ export function Header({ userName = "Usuario" }: HeaderProps) {
     router.push("/reports")
   }
 
+  const handleDashboard = () => {
+    router.push("/dashboard")
+  }
+
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
       <div className="flex items-center justify-between">
@@ -73,6 +77,10 @@ export function Header({ userName = "Usuario" }: HeaderProps) {
             )}
             {(hasRole('ROLE_ADMIN') || hasRole('ROLE_EMPLOYEE')) && (
               <>
+                <DropdownMenuItem onClick={handleDashboard}>
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Dashboard
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleMovements}>
                   <History className="w-4 h-4 mr-2" />
                   Historial de Movimientos

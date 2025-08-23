@@ -111,7 +111,9 @@ export default function ReportsPage() {
 
   // Función para calcular estadísticas usando la lógica correcta
   const calculateStats = (productList: Product[]) => {
-    if (!productList || productList.length === 0) {
+    // Asegurar que tenemos un array válido
+    if (!Array.isArray(productList) || productList.length === 0) {
+      console.log('Product list is empty or not an array:', productList)
       setStats({
         totalProducts: 0,
         stockProducts: 0,
