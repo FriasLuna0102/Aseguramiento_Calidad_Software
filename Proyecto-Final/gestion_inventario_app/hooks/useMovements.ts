@@ -44,13 +44,13 @@ export function useMovements() {
       const params = new URLSearchParams()
       
       // Agregar parámetros básicos
-      params.append('page', filters.page.toString())
-      params.append('size', filters.size.toString())
-      params.append('sortBy', filters.sortBy)
-      params.append('sortDirection', filters.sortDirection)
+      params.append('page', (filters.page || 0).toString())
+      params.append('size', (filters.size || 10).toString())
+      params.append('sortBy', filters.sortBy || 'dateModified')
+      params.append('sortDirection', filters.sortDirection || 'DESC')
 
       // Agregar filtros opcionales
-      if (filters.productName?.trim()) {
+      if (filters.productName && filters.productName.trim()) {
         params.append('productName', filters.productName.trim())
       }
       
@@ -58,31 +58,31 @@ export function useMovements() {
         params.append('modificationType', filters.modificationType)
       }
       
-      if (filters.username?.trim()) {
+      if (filters.username && filters.username.trim()) {
         params.append('username', filters.username.trim())
       }
       
-      if (filters.minStockDifference !== undefined) {
+      if (typeof filters.minStockDifference === 'number') {
         params.append('minStockDifference', filters.minStockDifference.toString())
       }
       
-      if (filters.maxStockDifference !== undefined) {
+      if (typeof filters.maxStockDifference === 'number') {
         params.append('maxStockDifference', filters.maxStockDifference.toString())
       }
       
-      if (filters.fromDate) {
-        params.append('fromDate', filters.fromDate)
+      if (filters.fromDate && filters.fromDate.trim()) {
+        params.append('fromDate', filters.fromDate.trim())
       }
       
-      if (filters.toDate) {
-        params.append('toDate', filters.toDate)
+      if (filters.toDate && filters.toDate.trim()) {
+        params.append('toDate', filters.toDate.trim())
       }
       
-      if (filters.searchTerm?.trim()) {
+      if (filters.searchTerm && filters.searchTerm.trim()) {
         params.append('searchTerm', filters.searchTerm.trim())
       }
 
-      const token = localStorage.getItem("token")
+      const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null
       const response = await fetch(`${BASE_URL}/api/v1/product-audit/all/history?${params.toString()}`, {
         method: "GET",
         headers: {

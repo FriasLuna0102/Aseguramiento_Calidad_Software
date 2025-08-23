@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -38,31 +38,9 @@ export default function MovementsPage() {
   const [userName, setUserName] = useState("Usuario")
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(10)
-  const [initialized, setInitialized] = useState(false)
-
-  // Función simple para cargar movimientos
-  const loadMovements = useCallback((page: number, size: number) => {
-    const filters: MovementFilters = {
-      productName: '',
-      username: '',
-      searchTerm: '',
-      fromDate: '',
-      toDate: '',
-      page: page,
-      size: size,
-      sortBy: 'dateModified',
-      sortDirection: 'DESC',
-      minStockDifference: undefined,
-      maxStockDifference: undefined,
-    }
-    
-    fetchMovements(filters)
-  }, [fetchMovements])
 
   // Inicialización
   useEffect(() => {
-    if (initialized) return
-
     const initializePage = async () => {
       if (!isAuthenticated()) {
         router.replace("/login")
@@ -85,12 +63,30 @@ export default function MovementsPage() {
       }
 
       // Cargar datos iniciales
-      loadMovements(0, 10)
-      setInitialized(true)
+      loadMovements(0, pageSize)
     }
 
     initializePage()
-  }, [initialized, isAuthenticated, hasRole, router, toast, loadMovements])
+  }, [isAuthenticated, hasRole, getUser, router, toast, pageSize])
+
+  // Función simple para cargar movimientos
+  const loadMovements = (page: number, size: number) => {
+    const filters: MovementFilters = {
+      productName: '',
+      username: '',
+      searchTerm: '',
+      fromDate: '',
+      toDate: '',
+      page: page,
+      size: size,
+      sortBy: 'dateModified',
+      sortDirection: 'DESC',
+      minStockDifference: undefined,
+      maxStockDifference: undefined,
+    }
+    
+    fetchMovements(filters)
+  }
 
   // Cambio de página
   const handlePageChange = (newPage: number) => {
@@ -180,12 +176,7 @@ export default function MovementsPage() {
                 {/* Información de resultados */}
                 <div className="flex items-center justify-between text-sm text-gray-600">
                   <span>
-                    {(() => {
-                      const validMovements = movements.content.filter(m => m.stockDifference !== 0)
-                      const entradas = validMovements.filter(m => m.stockDifference > 0).length
-                      const salidas = validMovements.filter(m => m.stockDifference < 0).length
-                      return `Mostrando ${validMovements.length} movimientos (${entradas} entradas, ${salidas} salidas)`
-                    })()}
+                    Mostrando {movements.content.filter(m => m.stockDifference !== 0).length} de {movements.totalElements} movimientos
                   </span>
                   <div className="flex items-center space-x-2">
                     <span>Mostrar:</span>
