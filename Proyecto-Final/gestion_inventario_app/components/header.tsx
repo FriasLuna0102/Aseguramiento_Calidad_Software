@@ -1,6 +1,6 @@
 "use client"
 
-import { User, LogOut, Package, Shield, Settings } from "lucide-react"
+import { User, LogOut, Package, Shield, History } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -18,7 +18,7 @@ interface HeaderProps {
 }
 
 export function Header({ userName = "Usuario" }: HeaderProps) {
-  const { logout, isAdmin } = useAuth()
+  const { logout, isAdmin, hasRole } = useAuth()
   const router = useRouter()
 
   const handleLogout = async () => {
@@ -27,6 +27,10 @@ export function Header({ userName = "Usuario" }: HeaderProps) {
 
   const handleAdminTokens = () => {
     router.push("/admin/tokens")
+  }
+
+  const handleMovements = () => {
+    router.push("/movements")
   }
 
   return (
@@ -54,6 +58,15 @@ export function Header({ userName = "Usuario" }: HeaderProps) {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
             <DropdownMenuSeparator />
+            {(hasRole('ROLE_ADMIN') || hasRole('ROLE_EMPLOYEE')) && (
+              <>
+                <DropdownMenuItem onClick={handleMovements}>
+                  <History className="w-4 h-4 mr-2" />
+                  Historial de Movimientos
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             {isAdmin() && (
               <>
                 <DropdownMenuItem onClick={handleAdminTokens}>
