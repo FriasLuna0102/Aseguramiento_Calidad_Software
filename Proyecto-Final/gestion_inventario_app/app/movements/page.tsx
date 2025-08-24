@@ -187,23 +187,6 @@ export default function MovementsPage() {
                       return `Mostrando ${validMovements.length} movimientos (${entradas} entradas, ${salidas} salidas)`
                     })()}
                   </span>
-                  <div className="flex items-center space-x-2">
-                    <span>Mostrar:</span>
-                    <Select
-                      value={pageSize.toString()}
-                      onValueChange={(value) => handlePageSizeChange(parseInt(value))}
-                    >
-                      <SelectTrigger className="w-20">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="10">10</SelectItem>
-                        <SelectItem value="25">25</SelectItem>
-                        <SelectItem value="50">50</SelectItem>
-                        <SelectItem value="100">100</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
 
                 {/* Tabla */}

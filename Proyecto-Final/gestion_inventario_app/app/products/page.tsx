@@ -450,7 +450,7 @@ export default function ProductsPage() {
           
           const params = new URLSearchParams({
             page: newPage.toString(),
-            size: "1000", // Mantener tamaño grande para filtros locales posteriores
+            size: pageSize.toString(), // Usar pageSize real
           });
 
           if (debouncedSearchTerm.trim() !== '') {
@@ -853,29 +853,6 @@ export default function ProductsPage() {
                         Mostrando {(displayedProducts.number * displayedProducts.size) + 1}-{Math.min((displayedProducts.number * displayedProducts.size) + displayedProducts.content.length, displayedProducts.totalElements)} de {displayedProducts.totalElements} productos
                         <br />
                         Página {displayedProducts.number + 1} de {displayedProducts.totalPages}
-                      </div>
-                      
-                      {/* Selector de tamaño de página */}
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-600">Mostrar:</span>
-                        <Select 
-                          value={pageSize.toString()} 
-                          onValueChange={(value) => {
-                            const newSize = parseInt(value)
-                            setPageSize(newSize)
-                            handlePageChange(0) // Reset to first page
-                          }}
-                        >
-                          <SelectTrigger className="w-20">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="10">10</SelectItem>
-                            <SelectItem value="25">25</SelectItem>
-                            <SelectItem value="50">50</SelectItem>
-                            <SelectItem value="100">100</SelectItem>
-                          </SelectContent>
-                        </Select>
                       </div>
                       
                       <div className="flex items-center space-x-2">
