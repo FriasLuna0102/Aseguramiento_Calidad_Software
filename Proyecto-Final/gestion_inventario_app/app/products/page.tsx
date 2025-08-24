@@ -160,11 +160,19 @@ export default function ProductsPage() {
 
   // Verificar autenticación
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    if (!token) {
-      router.push("/login")
+    // Agregar un pequeño delay para evitar conflictos con el login
+    const checkAuth = () => {
+      const token = localStorage.getItem("token")
+      if (!token && mounted) {
+        router.replace("/login")
+      }
     }
-  }, [router])
+    
+    // Verificar inmediatamente solo si ya estamos montados
+    if (mounted) {
+      checkAuth()
+    }
+  }, [router, mounted])
 
   // Manejar errores de chunks
   useEffect(() => {
