@@ -13,14 +13,25 @@ export function useTokens() {
   const [tokens, setTokens] = useState<Token[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalElements, setTotalElements] = useState(0)
 
-  const fetchTokens = async () => {
+  const fetchTokens = async (page: number = currentPage, size: number = pageSize) => {
     try {
       setLoading(true)
       setError(null)
 
       const token = localStorage.getItem("token")
-      const response = await fetch(`${BASE_URL}/api/v1/jwt/all`, {
+      
+      // Agregar parámetros de paginación
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+      })
+      
+      const response = await fetch(`${BASE_URL}/api/v1/jwt/all?${params.toString()}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -40,12 +51,28 @@ export function useTokens() {
       const data = await response.json()
       
       // Manejar tanto respuesta directa como paginada
-      const tokenList = Array.isArray(data) ? data : (data.content || [])
-      setTokens(tokenList)
+      if (Array.isArray(data)) {
+        // Respuesta directa (sin paginación del servidor)
+        setTokens(data)
+        setTotalPages(1)
+        setTotalElements(data.length)
+      } else if (data.content && Array.isArray(data.content)) {
+        // Respuesta paginada
+        setTokens(data.content)
+        setTotalPages(data.totalPages || 1)
+        setTotalElements(data.totalElements || data.content.length)
+        setCurrentPage(data.number || page)
+      } else {
+        setTokens([])
+        setTotalPages(0)
+        setTotalElements(0)
+      }
     } catch (err) {
       console.error("Error al cargar tokens:", err)
       setError(err instanceof Error ? err.message : "Error desconocido")
       setTokens([])
+      setTotalPages(0)
+      setTotalElements(0)
     } finally {
       setLoading(false)
     }
@@ -181,17 +208,23 @@ export function useTokens() {
   }
 
   useEffect(() => {
-    fetchTokens()
+    fetchTokens(0, pageSize)
   }, [])
 
   return {
     tokens,
     loading,
     error,
+    currentPage,
+    pageSize,
+    totalPages,
+    totalElements,
     fetchTokens,
     invalidateToken,
     isTokenExpired,
     formatExpirationDate,
     truncateToken,
+    setCurrentPage,
+    setPageSize,
   }
 }

@@ -10,7 +10,14 @@ import { useToast } from "@/hooks/use-toast"
 import { Header } from "@/components/header"
 import { useAuth } from "@/hooks/useAuth"
 import { useTokens } from "@/hooks/useTokens"
-import { AlertTriangle, Shield, Trash2, ArrowLeft, RefreshCw } from "lucide-react"
+import { AlertTriangle, Shield, Trash2, ArrowLeft, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,11 +38,17 @@ export default function TokensAdminPage() {
     tokens,
     loading,
     error,
+    currentPage,
+    pageSize,
+    totalPages,
+    totalElements,
     fetchTokens,
     invalidateToken,
     isTokenExpired,
     formatExpirationDate,
     truncateToken,
+    setCurrentPage,
+    setPageSize,
   } = useTokens()
 
   const [mounted, setMounted] = useState(false)
@@ -63,6 +76,17 @@ export default function TokensAdminPage() {
       setUserName(user.name || user.username || "Administrador")
     }
   }, [isAuthenticated, isAdmin, getUser, router])
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage)
+    fetchTokens(newPage, pageSize)
+  }
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize)
+    setCurrentPage(0)
+    fetchTokens(0, newSize)
+  }
 
   const handleInvalidateToken = async (tokenToInvalidate: string) => {
     try {
@@ -126,7 +150,7 @@ export default function TokensAdminPage() {
           <div className="text-center">
             <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={fetchTokens} className="bg-[#007BFF] hover:bg-[#003B73]">
+            <Button onClick={() => fetchTokens(currentPage, pageSize)} className="bg-[#007BFF] hover:bg-[#003B73]">
               Reintentar
             </Button>
           </div>
@@ -164,7 +188,7 @@ export default function TokensAdminPage() {
                 </div>
               </div>
               <Button
-                onClick={fetchTokens}
+                onClick={() => fetchTokens(currentPage, pageSize)}
                 variant="outline"
                 className="border-[#007BFF] text-[#007BFF] hover:bg-[#E0F0FF]"
               >
@@ -261,6 +285,40 @@ export default function TokensAdminPage() {
                     ))}
                   </TableBody>
                 </Table>
+                
+                {/* Controles de paginación */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-6">
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <span>
+                        Mostrando {tokens.length} de {totalElements} tokens
+                      </span>
+                      <span>•</span>
+                      <span>Página {currentPage + 1} de {totalPages}</span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 0}
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                        Anterior
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage >= totalPages - 1}
+                      >
+                        Siguiente
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
