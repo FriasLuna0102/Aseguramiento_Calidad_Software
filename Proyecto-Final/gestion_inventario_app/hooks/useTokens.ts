@@ -81,8 +81,12 @@ export function useTokens() {
   const invalidateToken = async (tokenToInvalidate: string) => {
     try {
       const authToken = localStorage.getItem("token")
+      
+      // Verificar si estamos invalidando nuestro propio token
+      const isOwnToken = authToken === tokenToInvalidate
+      
       const response = await fetch(`${BASE_URL}/api/v1/jwt/invalidate/${encodeURIComponent(tokenToInvalidate)}`, {
-        method: "GET",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(authToken && { Authorization: `Bearer ${authToken}` }),
@@ -90,8 +94,14 @@ export function useTokens() {
       })
 
       if (response.status === 401) {
-        handleUnauthorized()
-        return
+        // Solo llamar handleUnauthorized si invalidamos nuestro propio token
+        if (isOwnToken) {
+          handleUnauthorized()
+          return
+        } else {
+          // Si no es nuestro token, es un error de permisos real
+          throw new Error("No tienes permisos para invalidar este token")
+        }
       }
 
       if (!response.ok) {
@@ -107,10 +117,20 @@ export function useTokens() {
         )
       )
 
-      toast({
-        title: "Token invalidado",
-        description: "El token ha sido invalidado correctamente.",
-      })
+      if (isOwnToken) {
+        toast({
+          title: "Sesión cerrada",
+          description: "Has invalidado tu propio token de sesión.",
+        })
+        setTimeout(() => {
+          handleUnauthorized()
+        }, 1000) 
+      } else {
+        toast({
+          title: "Token invalidado",
+          description: "El token ha sido invalidado correctamente.",
+        })
+      }
     } catch (err) {
       console.error("Error al invalidar token:", err)
       toast({
