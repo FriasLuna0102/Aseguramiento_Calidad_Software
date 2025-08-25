@@ -1,11 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useAuth } from "@/hooks/useAuth"
 import type { Product, PaginatedProducts } from "@/types/product"
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:8080'
 
 export function useProducts() {
+  const { handleUnauthorized } = useAuth()
   const [products, setProducts] = useState<PaginatedProducts>({
     content: [],
     totalPages: 0,
@@ -58,15 +60,19 @@ export function useProducts() {
           }
       )
 
+      if (response.status === 401) {
+        handleUnauthorized()
+        return
+      }
+
       if (!response.ok) {
-        throw new Error(`Error al cargar productos: ${response.status}`)
+        return
       }
 
       const data: PaginatedProducts = await response.json()
       setProducts(data)
       setCurrentPage(page)
     } catch (err) {
-      console.error("Error al cargar productos:", err)
       setError(err instanceof Error ? err.message : "Error desconocido")
       setProducts({
         content: [],
@@ -97,6 +103,11 @@ export function useProducts() {
         },
         body: JSON.stringify(productData),
       })
+
+      if (response.status === 401) {
+        handleUnauthorized()
+        return
+      }
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -135,6 +146,11 @@ export function useProducts() {
         body: JSON.stringify(productData),
       })
 
+      if (response.status === 401) {
+        handleUnauthorized()
+        return
+      }
+
       if (!response.ok) {
         const errorText = await response.text()
         console.error("Error response:", errorText)
@@ -167,6 +183,11 @@ export function useProducts() {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
       })
+
+      if (response.status === 401) {
+        handleUnauthorized()
+        return
+      }
 
       if (!response.ok) {
         throw new Error(`Error al eliminar producto: ${response.status}`)

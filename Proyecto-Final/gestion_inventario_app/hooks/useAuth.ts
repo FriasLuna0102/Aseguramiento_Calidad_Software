@@ -9,6 +9,22 @@ export function useAuth() {
   const router = useRouter()
   const { toast } = useToast()
 
+  const handleUnauthorized = () => {
+    // Limpiar token del localStorage
+    localStorage.removeItem("token")
+    localStorage.removeItem("user")
+    
+    // Mostrar mensaje al usuario
+    toast({
+      title: "Sesión expirada",
+      description: "Tu sesión ha expirado. Serás redirigido al login.",
+      variant: "destructive",
+    })
+    
+    // Redirigir al login
+    router.push("/login")
+  }
+
   const logout = async () => {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null
@@ -102,6 +118,11 @@ export function useAuth() {
     return !hasRole('ROLE_GUEST')
   }
 
+  const isAdmin = (): boolean => {
+    // Solo los usuarios ROLE_ADMIN pueden acceder a administración de tokens
+    return hasRole('ROLE_ADMIN')
+  }
+
   return {
     logout,
     isAuthenticated,
@@ -111,5 +132,7 @@ export function useAuth() {
     canDelete,
     canCreate,
     canEdit,
+    isAdmin,
+    handleUnauthorized,
   }
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { User, LogOut, Package } from "lucide-react"
+import { User, LogOut, Package, Shield, History, BarChart3 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -11,16 +11,34 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/hooks/useAuth"
+import { useRouter } from "next/navigation"
 
 interface HeaderProps {
   userName?: string
 }
 
 export function Header({ userName = "Usuario" }: HeaderProps) {
-  const { logout } = useAuth()
+  const { logout, isAdmin, hasRole } = useAuth()
+  const router = useRouter()
 
   const handleLogout = async () => {
     await logout()
+  }
+
+  const handleAdminTokens = () => {
+    router.push("/admin/tokens")
+  }
+
+  const handleMovements = () => {
+    router.push("/movements")
+  }
+
+  const handleReports = () => {
+    router.push("/reports")
+  }
+
+  const handleDashboard = () => {
+    router.push("/dashboard")
   }
 
   return (
@@ -48,6 +66,37 @@ export function Header({ userName = "Usuario" }: HeaderProps) {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
             <DropdownMenuSeparator />
+            {hasRole('ROLE_GUEST') && (
+              <>
+                <DropdownMenuItem onClick={handleReports}>
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Reportes Básicos
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            {(hasRole('ROLE_ADMIN') || hasRole('ROLE_EMPLOYEE')) && (
+              <>
+                <DropdownMenuItem onClick={handleDashboard}>
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Dashboard
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleMovements}>
+                  <History className="w-4 h-4 mr-2" />
+                  Historial de Movimientos
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            {isAdmin() && (
+              <>
+                <DropdownMenuItem onClick={handleAdminTokens}>
+                  <Shield className="w-4 h-4 mr-2" />
+                  Administrar Tokens
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
               <LogOut className="w-4 h-4 mr-2" />
               Cerrar Sesión
